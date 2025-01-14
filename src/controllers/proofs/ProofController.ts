@@ -196,6 +196,7 @@ export class ProofController extends Controller {
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
         routing,
+        goalCode: createRequestOptions?.goalCode,
       })
 
       return {
@@ -206,6 +207,12 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        proofRecordThId: proof.proofRecord.threadId,
+        proofMessageId: proof.message.thread?.threadId
+          ? proof.message.thread?.threadId
+          : proof.message.threadId
+          ? proof.message.thread
+          : proof.message.id,
         recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
       }
     } catch (error) {
