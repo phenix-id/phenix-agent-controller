@@ -299,6 +299,7 @@ export interface DidCreate {
   didDocument?: DidDocument
   privatekey?: string
   endpoint?: string
+  isDefault?: boolean
 }
 
 export interface CreateTenantOptions {

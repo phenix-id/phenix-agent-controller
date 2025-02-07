@@ -44,6 +44,7 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  DidRepository,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -406,6 +407,16 @@ export class MultiTenancyController extends Controller {
         })
         didDocument = createdDid[0]?.didDocument
       }
+      if (createDidOptions.isDefault) {
+        const didRepository = await tenantAgent.dependencyManager.resolve(DidRepository)
+        const [didRecord] = await tenantAgent.dids.getCreatedDids({
+          did: did,
+          method: DidMethod.Key,
+        })
+        didRecord.setTag('isDefault', true)
+        await didRepository.update(tenantAgent.context, didRecord)
+      }
+      // defaultDidRecord = didRecord
 
       await tenantAgent.dids.import({
         did,
@@ -559,13 +570,20 @@ export class MultiTenancyController extends Controller {
 
   @Security('apiKey')
   @Get('/dids/:tenantId')
-  public async getDids(@Path('tenantId') tenantId: string) {
+  public async getDids(@Path('tenantId') tenantId: string, @Query('isDefault') isDefault: boolean = false) {
     try {
-      let getDids
+      let didRecord
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        getDids = await tenantAgent.dids.getCreatedDids()
+        if (isDefault) {
+          const didRepository = await tenantAgent.dependencyManager.resolve(DidRepository)
+          didRecord = await didRepository.findSingleByQuery(tenantAgent.context, {
+            isDefault: true,
+          })
+        } else {
+          didRecord = await tenantAgent.dids.getCreatedDids()
+        }
       })
-      return getDids
+      return didRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
@@ -643,8 +661,7 @@ export class MultiTenancyController extends Controller {
   @Delete('/connections/:connectionId/:tenantId')
   public async deleteConnectionById(@Path('tenantId') tenantId: string, @Path('connectionId') connectionId: RecordId) {
     try {
-      let connectionRecord
-      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      const connectionRecord = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const connection = await tenantAgent.connections.deleteById(connectionId)
         return JsonTransformer.toJSON(connection)
       })
