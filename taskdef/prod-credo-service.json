@@ -1,39 +1,35 @@
 {
-    "family": "DEV_AFJ_TASKDEF",
+    "family": "Prod_Platform-admin_TASKDEFITION",
     "containerDefinitions": [
         {
             "name": "Platform-admin",
             "image": "%REPOSITORY_URI%:CREDO_V_%BUILD_NUMBER%",
-            "cpu": 1024,
-            "memory": 2048,
+            "cpu": 2048,
+            "memory": 8019,
             "portMappings": [
                 {
-                    "containerPort": 8001,
-                    "hostPort": 8001,
+                    "name": "platform-admin-8002-tcp",
+                    "containerPort": 8002,
+                    "hostPort": 8002,
                     "protocol": "tcp"
                 },
                 {
-                    "containerPort": 9001,
-                    "hostPort": 9001,
+                    "name": "platform-admin-9002-tcp",
+                    "containerPort": 9002,
+                    "hostPort": 9002,
                     "protocol": "tcp"
                 }
-
             ],
             "essential": true,
             "command": [
                 "--auto-accept-connections",
                 "--config",
-                "/config/eb927bfe-8d01-4ea6-8643-b37be771afd6_Platform-admin.json"
+                "/config/3dcc6bba-a81a-4a1a-a256-267a09acb005_Platform-admin.json"
             ],
-            "environment": [
-                {
-                    "name": "AFJ_REST_LOG_LEVEL",
-                    "value": "1"
-                }
-            ],
+            "environment": [],
             "environmentFiles": [
                 {
-                    "value": "arn:aws:s3:::env-devbucket/dev-credo.env",
+                    "value": "arn:aws:s3:::env-prodbucket/prod-credo.env",
                     "type": "s3"
                 }
             ],
@@ -49,37 +45,36 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
+                    "awslogs-group": "/ecs/Prod_Platform-admin_TASKDEFITION",
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/DEV_AFJ_TASKDEF",
                     "awslogs-region": "ap-southeast-1",
                     "awslogs-stream-prefix": "ecs"
                 },
                 "secretOptions": []
-            }
+            },
+            "systemControls": []
         }
-        
     ],
-   
     "executionRoleArn": "arn:aws:iam::id:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "placementConstraints": [],
     "volumes": [
         {
-            "name": "AGNET-CONFIG",
+            "name": "AGENT-CONFIG",
             "efsVolumeConfiguration": {
-                "fileSystemId": "fs-0f406534d277ce362",
+                "fileSystemId": "fs-07c309727dd8993de",
                 "rootDirectory": "/",
                 "transitEncryption": "ENABLED",
                 "authorizationConfig": {
-                    "accessPointId": "fsap-08e845bf6b2e91d54",
+                    "accessPointId": "fsap-08d8c4b70c9f945ce",
                     "iam": "DISABLED"
                 }
             }
         }
     ],
+    "placementConstraints": [],
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "1024",
-    "memory": "2048"
+    "cpu": "2048",
+    "memory": "8019"
 }
