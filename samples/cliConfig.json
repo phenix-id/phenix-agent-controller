@@ -1,13 +1,13 @@
 {
-  "label": "AFJ Rest Agent 1",
+  "label": "AFJ Rest Agent",
   "walletId": "sample",
   "walletKey": "sample",
   "walletType": "postgres",
-  "walletUrl": "192.168.1.123:5452",
-  "walletAccount": "root",
-  "walletPassword": "root",
-  "walletAdminAccount": "root",
-  "walletAdminPassword": "root",
+  "walletUrl": "localhost:5432",
+  "walletAccount": "postgres",
+  "walletPassword": "postgres",
+  "walletAdminAccount": "postgres",
+  "walletAdminPassword": "postgres",
   "walletScheme": "DatabasePerWallet",
   "indyLedger": [
     {
@@ -39,10 +39,10 @@
   "autoAcceptMediationRequests": false,
   "adminPort": 4001,
   "tenancy": true,
-  "schemaFileServerURL": "https://schema.credebl.id/schemas/",
-  "didRegistryContractAddress": "0x0C16958c4246271622201101C83B9F0Fc7180d15",
-  "schemaManagerContractAddress": "0x4B16719E73949a62E9A7306F352ec73F1B143c27",
-  "rpcUrl": "https://polygon-rpc.com",
-  "fileServerUrl": "https://schema.credebl.id/",
-  "fileServerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImNhZDI3ZjhjLTMyNWYtNDRmZC04ZmZkLWExNGNhZTY3NTMyMSJ9.I3IR7abjWbfStnxzn1BhxhV0OEzt1x3mULjDdUcgWHk"
+  "schemaFileServerURL": "https://dev-schema.ngotag.com/schemas/",
+  "didRegistryContractAddress": "0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E",
+  "schemaManagerContractAddress": "0x4742d43C2dFCa5a1d4238240Afa8547Daf87Ee7a",
+  "rpcUrl": "https://rpc-amoy.polygon.technology",
+  "fileServerUrl": "https://dev-schema.ngotag.com/",
+  "fileServerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImRlYTNiZjdkLWQ0YWQtNGRkYS04MTllLTJhZmEyZDkzMWIzZSJ9.datbwanI2iVbMnb-BNj9gR1rbWJxOBAEx_QokylALzw"
 }

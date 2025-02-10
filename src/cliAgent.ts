@@ -177,12 +177,12 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0x0C16958c4246271622201101C83B9F0Fc7180d15',
-      schemaManagerContractAddress: '0x4B16719E73949a62E9A7306F352ec73F1B143c27',
+      didContractAddress: '0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E',
+      schemaManagerContractAddress: '0x4742d43C2dFCa5a1d4238240Afa8547Daf87Ee7a',
       fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCaHV0YW5OREkiLCJpZCI6IjZlMWFhMWFlLWY2OGUtNDljMy1hN2RkLTQ2YjEzMWI5YjliNSJ9.JTe1crdKlPVTijAKtX4TQORbbUhz04sX4kQTi5KKDZQ',
-      rpcUrl: 'https://polygon-rpc.com',
-      serverUrl: 'https://schema.ngotag.com',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6IjliZjNiODFlLTA0ZDEtNDdmYy1iZTIwLWE2MTBiZDE5NTZlZiJ9.suWGau_pvNhGSGHRMqomqWoYhwMA7pcRt0kyHhaRZhM',
+      rpcUrl: 'https://rpc-amoy.polygon.technology',
+      serverUrl: 'https://dev-schema.ngotag.com',
     }),
   }
 }
