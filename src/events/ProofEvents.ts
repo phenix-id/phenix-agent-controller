@@ -19,6 +19,12 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
       console.log(`body:`,JSON.stringify(body,null,2));
     }
 
+    if (event.metadata.contextCorrelationId === 'default' && record.state === 'done')
+    {
+      const data = await agent.proofs.getFormatData(record.id);
+      body.proofData = data
+    }
+
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       await sendWebhookEvent(config.webhookUrl + '/proofs', body, agent.config.logger)

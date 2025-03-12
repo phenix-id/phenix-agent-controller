@@ -1,11 +1,19 @@
 import type {
   AcceptProofRequestOptions,
+  PeerDidNumAlgo2CreateOptions,
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, Key, KeyType, RecordNotFoundError } from '@credo-ts/core'
+import {
+  Agent,
+  createPeerDidDocumentFromServices,
+  Key,
+  KeyType,
+  PeerDidNumAlgo,
+  RecordNotFoundError,
+} from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import { ProofRecordExample, RecordId } from '../examples'
@@ -170,16 +178,38 @@ export class ProofController extends Controller {
   ) {
     try {
       let routing: Routing
-      if (createRequestOptions?.recipientKey) {
-        routing = {
-          endpoints: this.agent.config.endpoints,
-          routingKeys: [],
-          recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
-          mediatorId: undefined,
-        }
+      let invitationDid: string | undefined
+      if (createRequestOptions?.invitationDid) {
+        invitationDid = createRequestOptions?.invitationDid
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        if (createRequestOptions?.recipientKey) {
+          routing = {
+            endpoints: this.agent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+        } else {
+          routing = await this.agent.mediationRecipient.getRouting({})
+        }
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: routing.routingKeys,
+            routingKeys: routing.routingKeys,
+            serviceEndpoint: routing.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
       }
+
       const proof = await this.agent.proofs.createRequest({
         protocolVersion: createRequestOptions.protocolVersion as ProofsProtocolVersionType<[]>,
         proofFormats: createRequestOptions.proofFormats,
@@ -195,7 +225,8 @@ export class ProofController extends Controller {
         messages: [proofMessage],
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
-        routing,
+        invitationDid,
+        goalCode: createRequestOptions?.goalCode,
       })
 
       return {
@@ -206,7 +237,13 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        recipientKey: createRequestOptions?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+        proofRecordThId: proof.proofRecord.threadId,
+        proofMessageId: proof.message.thread?.threadId
+          ? proof.message.thread?.threadId
+          : proof.message.threadId
+          ? proof.message.thread
+          : proof.message.id,
+        invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })

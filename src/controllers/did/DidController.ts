@@ -407,7 +407,7 @@ export class DidController extends Controller {
       throw Error('Invalid private key or not supported')
     }
 
-    return this.agent.dids.create<PolygonDidCreateOptions>({
+    const createDidResponse = await this.agent.dids.create<PolygonDidCreateOptions>({
       method: 'polygon',
       options: {
         network: networkName,
@@ -417,6 +417,11 @@ export class DidController extends Controller {
         privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
       },
     })
+    const didResponse = {
+      did: createDidResponse?.didState?.did,
+      didDoc: createDidResponse?.didState?.didDocument,
+    }
+    return didResponse
   }
 
   @Get('/')
