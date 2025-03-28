@@ -2,8 +2,8 @@ import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAge
 import type { Version } from '../examples'
 import type { RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { AnonCredsProofFormatService, LegacyIndyProofFormatService, V1ProofProtocol } from '@credo-ts/anoncreds'
 import type {
-  AcceptProofRequestOptions,
   BasicMessageStorageProps,
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
@@ -14,6 +14,7 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
+  AcceptProofRequestOptions,
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
@@ -45,6 +46,8 @@ import {
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
   DidRepository,
+  W3cCredentialRecord,
+  SelectCredentialsForProofRequestOptions,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -84,6 +87,7 @@ import {
 } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
+// import { AcceptProofRequestOptions } from '@credo-ts/core/build/modules/proofs/protocol/ProofProtocolOptions'
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -1517,6 +1521,23 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Get('/credentialsForRequest/:tenantId/:proofRecordId')
+  public async getCredentialsForRequest(
+    @Path('tenantId') tenantId: string,
+    @Path('proofRecordId') proofRecordId: RecordId
+  ) {
+    let credentials
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        credentials = await tenantAgent.proofs.getCredentialsForRequest({ proofRecordId })
+      })
+      return credentials
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Get('/form-data/:tenantId/:proofRecordId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async proofFormData(@Path('proofRecordId') proofRecordId: string, @Path('tenantId') tenantId: string) {
@@ -1656,6 +1677,72 @@ export class MultiTenancyController extends Controller {
           proofRecordId,
           comment: request.comment,
           proofFormats: requestedCredentials.proofFormats,
+        }
+        console.log('acceptProofRequest from selectCredentialsForRequest:', JSON.stringify(acceptProofRequest, null, 2))
+        const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
+
+        proofRecord = proof.toJSON()
+      })
+      return proofRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/proofs/accept-request-with-cred/:tenantId')
+  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  public async acceptRequestWithProofFormatInput(
+    @Path('tenantId') tenantId: string,
+    @Body()
+    acceptRequestWithProofFormatInput: {
+      proofRecordId: string
+      comment?: string
+      proofFormats: {
+        presentationExchange: {
+          credentials: Record<string, string>
+        }
+      }
+    }
+  ) {
+    let proofRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const getCredentials = await tenantAgent.proofs.getCredentialsForRequest({
+          proofRecordId: acceptRequestWithProofFormatInput.proofRecordId,
+        })
+
+        const proofFormats: {
+          presentationExchange: {
+            credentials: Record<string, any>
+          }
+        } = {
+          presentationExchange: {
+            credentials: {},
+          },
+        }
+
+        getCredentials.proofFormats.presentationExchange?.requirements.forEach((requirement) => {
+          proofFormats.presentationExchange.credentials[`${requirement.submissionEntry[0].inputDescriptorId}`] = [
+            // requirement.submissionEntry[0].verifiableCredentials[
+            //   acceptRequestWithProofFormatInput.proofFormats.presentationExchange.credentials[
+            //     `${requirement.submissionEntry[0].inputDescriptorId}`
+            //   ]
+            // ].credentialRecord,
+            requirement.submissionEntry[0].verifiableCredentials.find(
+              (credentials) =>
+                credentials.credentialRecord.id ===
+                acceptRequestWithProofFormatInput.proofFormats.presentationExchange.credentials[
+                  `${requirement.submissionEntry[0].inputDescriptorId}`
+                ]
+            )?.credentialRecord,
+          ]
+        })
+
+        const acceptProofRequest = {
+          proofRecordId: acceptRequestWithProofFormatInput.proofRecordId,
+          comment: acceptRequestWithProofFormatInput.comment,
+          proofFormats: proofFormats,
         }
         const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
 
