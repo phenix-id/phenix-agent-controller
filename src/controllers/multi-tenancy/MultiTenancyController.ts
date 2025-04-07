@@ -15,6 +15,7 @@ import type {
   ProofsProtocolVersionType,
   Routing,
   AcceptProofRequestOptions,
+  DeclineProofRequestOptions,
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
@@ -1690,6 +1691,36 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Post('/proofs/:proofRecordId/decline-request/:tenantId')
+  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  public async declineRequest(
+    @Path('tenantId') tenantId: string,
+    @Path('proofRecordId') proofRecordId: string,
+    @Body()
+    request: //TODO type for request
+    {
+      sendProblemReport?: boolean
+      problemReportDescription?: string
+    }
+  ) {
+    let proofRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const declineProofRequestOptions: DeclineProofRequestOptions = {
+          proofRecordId,
+          sendProblemReport: request.sendProblemReport,
+          problemReportDescription: request.problemReportDescription,
+        }
+        const proof = await tenantAgent.proofs.declineRequest(declineProofRequestOptions)
+        proofRecord = proof.toJSON()
+      })
+      return proofRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Post('/proofs/accept-request-with-cred/:tenantId')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async acceptRequestWithProofFormatInput(
@@ -1745,7 +1776,6 @@ export class MultiTenancyController extends Controller {
           proofFormats: proofFormats,
         }
         const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
-
         proofRecord = proof.toJSON()
       })
       return proofRecord
