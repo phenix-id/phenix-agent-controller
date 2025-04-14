@@ -1576,6 +1576,14 @@
 				],
 				"type": "string"
 			},
+			"Record_string.string_": {
+				"properties": {},
+				"additionalProperties": {
+					"type": "string"
+				},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
 			"QuestionAnswerRole": {
 				"enum": [
 					"questioner",
@@ -5580,6 +5588,47 @@
 				]
 			}
 		},
+		"/multi-tenancy/credentialsForRequest/{tenantId}/{proofRecordId}": {
+			"get": {
+				"operationId": "GetCredentialsForRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "proofRecordId",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RecordId"
+						}
+					}
+				]
+			}
+		},
 		"/multi-tenancy/form-data/{tenantId}/{proofRecordId}": {
 			"get": {
 				"operationId": "ProofFormData",
@@ -5798,6 +5847,163 @@
 										"type": "boolean"
 									}
 								},
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/proofs/{proofRecordId}/decline-request/{tenantId}": {
+			"post": {
+				"operationId": "DeclineRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "proofRecordId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"problemReportDescription": {
+										"type": "string"
+									},
+									"sendProblemReport": {
+										"type": "boolean"
+									}
+								},
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/proofs/accept-request-with-cred/{tenantId}": {
+			"post": {
+				"operationId": "AcceptRequestWithProofFormatInput",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"metadata": {},
+											"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+											"createdAt": "2022-01-01T00:00:00.000Z",
+											"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+											"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+											"protocolVersion": "v1"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"proofFormats": {
+										"properties": {
+											"presentationExchange": {
+												"properties": {
+													"credentials": {
+														"$ref": "#/components/schemas/Record_string.string_"
+													}
+												},
+												"required": [
+													"credentials"
+												],
+												"type": "object"
+											}
+										},
+										"required": [
+											"presentationExchange"
+										],
+										"type": "object"
+									},
+									"comment": {
+										"type": "string"
+									},
+									"proofRecordId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"proofFormats",
+									"proofRecordId"
+								],
 								"type": "object"
 							}
 						}
