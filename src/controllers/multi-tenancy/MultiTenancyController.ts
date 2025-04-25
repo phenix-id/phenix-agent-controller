@@ -1463,6 +1463,39 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Get('/credentials/w3c/:tenantId')
+  public async getAllW3cCredentials(@Path('tenantId') tenantId: string) {
+    let credentialRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const credentials = await tenantAgent.w3cCredentials.getAllCredentialRecords()
+        credentialRecord = credentials.map((c: any) => c.toJSON())
+      })
+      return credentialRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Get('/credentials/w3c/:tenantId/:credentialRecordId')
+  public async getW3cCredential(
+    @Path('tenantId') tenantId: string,
+    @Path('credentialRecordId') credentialRecordId: string
+  ) {
+    let credentialRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const credential = await tenantAgent.w3cCredentials.getCredentialRecordById(credentialRecordId)
+        credentialRecord = credential.toJSON()
+      })
+      return credentialRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Post('/credentials/accept-offer/:tenantId')
   public async acceptOffer(
     @Path('tenantId') tenantId: string,
