@@ -26,6 +26,7 @@ import {
   parseIndyCredentialDefinitionId,
   parseIndySchemaId,
 } from '@credo-ts/anoncreds'
+import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
 import {
   AcceptCredentialOfferOptions,
   Agent,
@@ -80,6 +81,8 @@ import {
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
   CreateSchemaInput,
+  SignDataOptions,
+  VerifyDataOptions,
 } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
@@ -1884,6 +1887,62 @@ export class MultiTenancyController extends Controller {
         basicMessageRecord = await tenantAgent.basicMessages.sendMessage(connectionId, request.content)
       })
       return basicMessageRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Sign data using a key
+   *
+   * @param tenantId Tenant identifier
+   * @param request Sign options
+   *  data - Data has to be in base64 format
+   *  publicKeyBase58 - Public key in base58 format
+   * @returns Signature in base64 format
+   */
+  @Security('apiKey')
+  @Post('/sign/:tenantId')
+  public async sign(@Path('tenantId') tenantId: string, @Body() request: SignDataOptions) {
+    try {
+      const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        assertAskarWallet(tenantAgent.context.wallet)
+        const signature = await tenantAgent.context.wallet.sign({
+          data: TypedArrayEncoder.fromBase64(request.data),
+          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+        })
+        return TypedArrayEncoder.toBase64(signature)
+      })
+      return signature
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Verify data using a key
+   *
+   * @param tenantId Tenant identifier
+   * @param request Verify options
+   *  data - Data has to be in base64 format
+   *  publicKeyBase58 - Public key in base58 format
+   *  signature - Signature in base64 format
+   * @returns isValidSignature - true if signature is valid, false otherwise
+   */
+  @Security('apiKey')
+  @Post('/verify/:tenantId')
+  public async verify(@Path('tenantId') tenantId: string, @Body() request: VerifyDataOptions) {
+    try {
+      const isValidSignature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        assertAskarWallet(tenantAgent.context.wallet)
+        const isValidSignature = await tenantAgent.context.wallet.verify({
+          data: TypedArrayEncoder.fromBase64(request.data),
+          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+          signature: TypedArrayEncoder.fromBase64(request.signature),
+        })
+        return isValidSignature
+      })
+      return isValidSignature
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
