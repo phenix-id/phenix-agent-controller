@@ -1603,6 +1603,23 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Delete('/credential/w3c/:credentialRecordId/:tenantId')
+  public async deleteW3cCredentialById(
+    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Path('tenantId') tenantId: string
+  ) {
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        await tenantAgent.w3cCredentials.removeCredentialRecord(credentialRecordId)
+      })
+
+      return { message: 'W3C Credential Deleted Successfully' }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Get('/proofs/:tenantId')
   public async getAllProofs(@Path('tenantId') tenantId: string, @Query('threadId') threadId?: string) {
     let proofRecord
