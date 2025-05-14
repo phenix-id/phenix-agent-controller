@@ -1,5 +1,9 @@
 import type { RestAgentModules } from '../../cliAgent'
-import type { CredentialExchangeRecordProps, CredentialProtocolVersionType, Routing } from '@credo-ts/core'
+import type {
+  CredentialExchangeRecordProps,
+  CredentialProtocolVersionType,
+  PeerDidNumAlgo2CreateOptions,
+} from '@credo-ts/core'
 
 import { LegacyIndyCredentialFormatService, V1CredentialProtocol } from '@credo-ts/anoncreds'
 import {
@@ -10,6 +14,8 @@ import {
   W3cCredentialService,
   Key,
   KeyType,
+  PeerDidNumAlgo,
+  createPeerDidDocumentFromServices,
 } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
@@ -205,21 +211,57 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      let routing: Routing
+      let invitationDid: string | undefined
       const linkSecretIds = await this.agent.modules.anoncreds.getLinkSecretIds()
       if (linkSecretIds.length === 0) {
         await this.agent.modules.anoncreds.createLinkSecret()
       }
-      if (outOfBandOption?.recipientKey) {
-        routing = {
+
+      if (outOfBandOption?.invitationDid) {
+        invitationDid = outOfBandOption?.invitationDid
+      } else if (outOfBandOption?.recipientKey) {
+        const didRouting = {
           endpoints: this.agent.config.endpoints,
           routingKeys: [],
           recipientKey: Key.fromPublicKeyBase58(outOfBandOption.recipientKey, KeyType.Ed25519),
           mediatorId: undefined,
         }
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [didRouting.recipientKey],
+            routingKeys: didRouting.routingKeys,
+            serviceEndpoint: didRouting.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        const didRouting = await this.agent.mediationRecipient.getRouting({})
+        const didDocument = createPeerDidDocumentFromServices([
+          {
+            id: 'didcomm',
+            recipientKeys: [didRouting.recipientKey],
+            routingKeys: didRouting.routingKeys,
+            serviceEndpoint: didRouting.endpoints[0],
+          },
+        ])
+        const did = await this.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
+          didDocument,
+          method: 'peer',
+          options: {
+            numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
+          },
+        })
+        invitationDid = did.didState.did
       }
+
       const offerOob = await this.agent.credentials.createOffer({
         protocolVersion: outOfBandOption.protocolVersion as CredentialProtocolVersionType<[]>,
         credentialFormats: outOfBandOption.credentialFormats,
@@ -233,7 +275,8 @@ export class CredentialController extends Controller {
         messages: [credentialMessage],
         autoAcceptConnection: true,
         imageUrl: outOfBandOption?.imageUrl,
-        routing,
+        goalCode: outOfBandOption?.goalCode,
+        invitationDid,
       })
       return {
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
@@ -243,7 +286,9 @@ export class CredentialController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-        recipientKey: outOfBandOption?.recipientKey ? {} : { recipientKey: routing.recipientKey.publicKeyBase58 },
+        outOfBandRecordId: outOfBandRecord.id,
+        credentialRequestThId: offerOob.credentialRecord.threadId,
+        invitationDid: outOfBandOption?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
