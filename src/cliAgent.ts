@@ -184,19 +184,17 @@ const getModules = (
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Number(process.env.INMEMORY_LRU_CACHE_LIMIT) || Infinity }),
+      cache: new InMemoryLruCache({ limit: 2147483647 }),
     }),
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: didRegistryContractAddress
-        ? didRegistryContractAddress
-        : (process.env.DID_CONTRACT_ADDRESS as string),
-      schemaManagerContractAddress:
-        schemaManagerContractAddress || (process.env.SCHEMA_MANAGER_CONTRACT_ADDRESS as string),
-      fileServerToken: fileServerToken ? fileServerToken : (process.env.FILE_SERVER_TOKEN as string),
-      rpcUrl: rpcUrl ? rpcUrl : (process.env.RPC_URL as string),
-      serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
+      didContractAddress: '0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E',
+      schemaManagerContractAddress: '0x4742d43C2dFCa5a1d4238240Afa8547Daf87Ee7a',
+      fileServerToken:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6IjliZjNiODFlLTA0ZDEtNDdmYy1iZTIwLWE2MTBiZDE5NTZlZiJ9.suWGau_pvNhGSGHRMqomqWoYhwMA7pcRt0kyHhaRZhM',
+      rpcUrl: 'https://rpc-amoy.polygon.technology',
+      serverUrl: 'https://dev-schema.ngotag.com',
     }),
   }
 }
@@ -228,8 +226,8 @@ const getWithTenantModules = (
   )
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Number(process.env.SESSION_ACQUIRE_TIMEOUT) || Infinity,
-      sessionLimit: Number(process.env.SESSION_LIMIT) || Infinity,
+      sessionAcquireTimeout: 86400000,
+      sessionLimit: 2147483647,
     }),
     ...modules,
   }

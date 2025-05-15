@@ -953,16 +953,16 @@ export class MultiTenancyController extends Controller {
           schema,
         })
       })
-      if (schemaResponse.schemaState?.state === CredentialEnum.Failed) {
+
+      if (schemaResponse.schemaState?.state === 'failed') {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
-          throw new PaymentRequiredError(
-            'Insufficient funds to the address, Please add funds to perform this operation'
-          )
+          throw new Error('Insufficient funds to the address, Please add funds to perform this operation')
         } else {
-          throw new InternalServerError(schemaResponse.schemaState?.reason)
+          throw new Error(schemaResponse.schemaState?.reason)
         }
       }
+
       const configFileData = fs.readFileSync('config.json', 'utf-8')
       const config = JSON.parse(configFileData)
       if (!config.schemaFileServerURL) {
@@ -1530,6 +1530,7 @@ export class MultiTenancyController extends Controller {
           autoAcceptProof: createRequestOptions.autoAcceptProof,
           comment: createRequestOptions.comment,
         })
+        console.log(`-----------createProofRequest`,JSON.stringify(proof,null,2));
 
         const proofMessage = proof.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
@@ -1558,7 +1559,7 @@ export class MultiTenancyController extends Controller {
           invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         }
       })
-
+      console.log(`-----------createProofRequest oobProofRecord`,JSON.stringify(oobProofRecord,null,2));
       return oobProofRecord
     } catch (error) {
       throw ErrorHandlingService.handle(error)
@@ -1945,6 +1946,37 @@ export class MultiTenancyController extends Controller {
       return isValidSignature
     } catch (error) {
       throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  /**
+   * Send a question to a connection
+   *
+   * @param tenantId Tenant identifier
+   * @param connectionId Connection identifier
+   * @param content The content of the message
+   */
+  @Security('apiKey')
+  @Post('/basic-message/:connectionId/:tenantId')
+  public async sendBasicMessage(
+    @Path('connectionId') connectionId: RecordId,
+    @Path('tenantId') tenantId: string,
+    @Body() request: Record<'content', string>,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      let basicMessageRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        basicMessageRecord = await tenantAgent.basicMessages.sendMessage(connectionId, request.content)
+        basicMessageRecord = basicMessageRecord?.toJSON()
+      })
+      return basicMessageRecord
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
     }
   }
 }

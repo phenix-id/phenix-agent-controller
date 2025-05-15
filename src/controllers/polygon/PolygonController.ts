@@ -68,12 +68,11 @@ export class Polygon extends Controller {
         schemaName,
         schema,
       })
+
       if (schemaResponse.schemaState?.state === 'failed') {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
-          throw new UnprocessableEntityError(
-            'Insufficient funds to the address, Please add funds to perform this operation'
-          )
+          throw new Error('Insufficient funds to the address, Please add funds to perform this operation')
         } else {
           throw new Error(schemaResponse.schemaState?.reason)
         }

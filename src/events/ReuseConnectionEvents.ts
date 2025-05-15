@@ -7,6 +7,7 @@ import { sendWebSocketEvent } from './WebSocketEvents'
 import { sendWebhookEvent } from './WebhookEvent'
 
 export const reuseConnectionEvents = async (agent: Agent, config: ServerConfig) => {
+  agent.config.logger.debug('Registering Reuse Connection Events ::::::::')
   agent.events.on(OutOfBandEventTypes.HandshakeReused, async (event: HandshakeReusedEvent) => {
     const body = {
       ...event.payload.connectionRecord.toJSON(),
