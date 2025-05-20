@@ -39,9 +39,9 @@
   "validate": "yarn lint && yarn check-types && yarn check-format"
   },
 "dependencies": {
-  "@ayanworks/credo-polygon-w3c-module": "2.0.0-alpha.1",
-  "@ayanworks/polygon-did-registrar": "2.0.0-alpha.1",
-  "@ayanworks/polygon-did-resolver": "2.0.1-alpha.0",
+  "@bhutan-ndi/credo-polygon-w3c-module": "0.0.1-alpha.0",
+  "@bhutan-ndi/polygon-did-registrar": "0.0.0-alpha.0",
+  "@bhutan-ndi/polygon-did-resolver": "0.0.1-alpha.1",
   "@ayanworks/polygon-schema-manager": "2.0.0-alpha.1",
   "@credo-ts/anoncreds": "0.5.3",
   "@credo-ts/askar": "0.5.3",

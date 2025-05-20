@@ -148,10 +148,10 @@ const parsed = yargs
 
   .config()
   .env('AFJ_REST')
-  .parse()
+  .parseSync()
 
-const argv = yargs.argv
-const storageConfig = argv['wallet-type']
+// const argv = yargs.argv
+const storageConfig = parsed['wallet-type']
 
 // eslint-disable-next-line no-console
 console.log('Storage Config after YARGS::', storageConfig)

@@ -1,6 +1,6 @@
 import type { InitConfig } from '@credo-ts/core'
 
-import { PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+import { PolygonModule } from '@bhutan-ndi/credo-polygon-w3c-module'
 import {
   AnonCredsModule,
   LegacyIndyCredentialFormatService,

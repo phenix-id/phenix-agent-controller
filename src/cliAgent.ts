@@ -2,7 +2,7 @@ import type { InitConfig } from '@credo-ts/core'
 import type { WalletConfig } from '@credo-ts/core/build/types'
 import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
-import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@bhutan-ndi/credo-polygon-w3c-module'
 import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
@@ -177,12 +177,12 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
 
     questionAnswer: new QuestionAnswerModule(),
     polygon: new PolygonModule({
-      didContractAddress: '0x0C16958c4246271622201101C83B9F0Fc7180d15',
-      schemaManagerContractAddress: '0x4B16719E73949a62E9A7306F352ec73F1B143c27',
+      didContractAddress: '0x7423254347AbE61F7606d0b850CAa1233Fb660bC',
+      schemaManagerContractAddress: '0xbE3F8C090C4ecF52322eD49E7f9BB4a2686C4136',
       fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJCaHV0YW5OREkiLCJpZCI6IjZlMWFhMWFlLWY2OGUtNDljMy1hN2RkLTQ2YjEzMWI5YjliNSJ9.JTe1crdKlPVTijAKtX4TQORbbUhz04sX4kQTi5KKDZQ',
-      rpcUrl: 'https://polygon-rpc.com',
-      serverUrl: 'https://schema.ngotag.com',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImVkNGEwMDdkLTI5M2UtNDZjNC05MjRiLTE3YzIyMjFkNjNmOCJ9.RziaBm-J96wJtR2QCTA_1yIfvuZn95t-bZ7_hwHWoxU',
+      rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/m0SEA2hYFe149nEdKYMPao8Uv_ZrPqeM',
+      serverUrl: 'https://dev-schema.ngotag.com/',
     }),
   }
 }

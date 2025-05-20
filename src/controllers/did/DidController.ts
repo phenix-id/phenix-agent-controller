@@ -1,5 +1,5 @@
 import type { DidResolutionResultProps } from '../types'
-import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { PolygonDidCreateOptions } from '@bhutan-ndi/credo-polygon-w3c-module/build/dids'
 import type { KeyDidCreateOptions } from '@credo-ts/core'
 
 import {
