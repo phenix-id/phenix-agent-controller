@@ -180,9 +180,9 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       didContractAddress: '0x7423254347AbE61F7606d0b850CAa1233Fb660bC',
       schemaManagerContractAddress: '0xbE3F8C090C4ecF52322eD49E7f9BB4a2686C4136',
       fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImVkNGEwMDdkLTI5M2UtNDZjNC05MjRiLTE3YzIyMjFkNjNmOCJ9.RziaBm-J96wJtR2QCTA_1yIfvuZn95t-bZ7_hwHWoxU',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6IjlmYjI5YmVkLWJiNjUtNGU4YS1iOWI2LWExMjM1OGJjZjFhOCJ9.lxqIaVK7KIqwWYFQW6swXsBuFW1Ouq0u-yIfLYJScIA',
       rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/m0SEA2hYFe149nEdKYMPao8Uv_ZrPqeM',
-      serverUrl: 'https://dev-schema.ngotag.com/',
+      serverUrl: 'https://stg-eth-schema.ngotag.com',
     }),
   }
 }
