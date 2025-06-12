@@ -390,3 +390,16 @@ export interface SchemaMetadata {
   schemaTxnHash?: string
   schemaUrl?: string
 }
+
+export type SignDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+}
+
+export type VerifyDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+  signature: string
+}

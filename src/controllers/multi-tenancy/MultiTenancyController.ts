@@ -26,6 +26,7 @@ import {
   parseIndySchemaId,
   AnonCredsError,
 } from '@credo-ts/anoncreds'
+import { assertAskarWallet } from '@credo-ts/askar/build/utils/assertAskarWallet'
 import {
   AcceptCredentialOfferOptions,
   Agent,
@@ -66,6 +67,8 @@ import {
   WriteTransaction,
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
+  SignDataOptions,
+  VerifyDataOptions,
 } from '../types'
 
 import {
@@ -1643,8 +1646,6 @@ export class MultiTenancyController extends Controller {
           autoAcceptProof: createRequestOptions.autoAcceptProof,
           comment: createRequestOptions.comment,
         })
-        console.log(`-----------createProofRequest`,JSON.stringify(proof,null,2));
-
         const proofMessage = proof.message
         const outOfBandRecord = await tenantAgent.oob.createInvitation({
           label: createRequestOptions.label,
@@ -1672,7 +1673,6 @@ export class MultiTenancyController extends Controller {
           invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
         }
       })
-      console.log(`-----------createProofRequest oobProofRecord`,JSON.stringify(oobProofRecord,null,2));
       return oobProofRecord
     } catch (error) {
       return internalServerError(500, { message: `something went wrong: ${error}` })
@@ -2041,6 +2041,78 @@ export class MultiTenancyController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  /**
+   * Sign data using a key
+   *
+   * @param tenantId Tenant identifier
+   * @param request Sign options
+   *  data - Data has to be in base64 format
+   *  publicKeyBase58 - Public key in base58 format
+   * @returns Signature in base64 format
+   */
+  @Security('apiKey')
+  @Post('/sign/:tenantId')
+  public async sign(
+    @Path('tenantId') tenantId: string,
+    @Body() request: SignDataOptions,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        assertAskarWallet(tenantAgent.context.wallet)
+        const signature = await tenantAgent.context.wallet.sign({
+          data: TypedArrayEncoder.fromBase64(request.data),
+          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+        })
+        return TypedArrayEncoder.toBase64(signature)
+      })
+      return signature
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, { reason: `record with key "${request.publicKeyBase58}" not found.` })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  /**
+   * Verify data using a key
+   *
+   * @param tenantId Tenant identifier
+   * @param request Verify options
+   *  data - Data has to be in base64 format
+   *  publicKeyBase58 - Public key in base58 format
+   *  signature - Signature in base64 format
+   * @returns isValidSignature - true if signature is valid, false otherwise
+   */
+  @Security('apiKey')
+  @Post('/verify/:tenantId')
+  public async verify(
+    @Path('tenantId') tenantId: string,
+    @Body() request: VerifyDataOptions,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const isValidSignature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        assertAskarWallet(tenantAgent.context.wallet)
+        const isValidSignature = await tenantAgent.context.wallet.verify({
+          data: TypedArrayEncoder.fromBase64(request.data),
+          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+          signature: TypedArrayEncoder.fromBase64(request.signature),
+        })
+        return isValidSignature
+      })
+      return isValidSignature
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        return notFoundError(404, { reason: `record with key "${request.publicKeyBase58}" not found.` })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
     }
