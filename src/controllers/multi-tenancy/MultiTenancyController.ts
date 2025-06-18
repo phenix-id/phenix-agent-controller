@@ -13,12 +13,17 @@ import type {
   ProofExchangeRecordProps,
   ProofsProtocolVersionType,
   Routing,
+  WalletConfig,
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
 import type { TenantRecord } from '@credo-ts/tenants'
 import type { TenantAgent } from '@credo-ts/tenants/build/TenantAgent'
-
+import { AskarWallet } from '@credo-ts/askar'
+import {
+  keyDerivationMethodToStoreKeyMethod,
+  uriFromWalletConfig,
+} from "@credo-ts/askar/build/utils"
 import {
   getUnqualifiedSchemaId,
   getUnqualifiedCredentialDefinitionId,
@@ -46,6 +51,7 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  KeyDerivationMethod,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -83,6 +89,9 @@ import {
   Example,
   Security,
 } from 'tsoa'
+import { Store } from '@hyperledger/aries-askar-nodejs'
+import path from 'path'
+import { Logger } from 'tslog'
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -2043,6 +2052,269 @@ export class MultiTenancyController extends Controller {
         return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/export-tenant/:tenantId')
+  public async exportTenant(
+    @Path('tenantId') tenantId: string,
+    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const walletConfig = await this.agent.wallet.walletConfig;
+      console.log(`Wallet Config: ${JSON.stringify(walletConfig)}`)
+      
+      if (!walletConfig) {
+        throw new Error('Wallet config not found')
+      }
+
+      const askarWalletConfig = await this.getAskarWalletConfig(walletConfig)
+      console.log(`askarWalletConfig: ${JSON.stringify(askarWalletConfig)}`)
+
+      const baseStore = await Store.open({
+        uri: askarWalletConfig.uri,
+        keyMethod: askarWalletConfig.keyMethod,
+        passKey: askarWalletConfig.passKey,
+      })
+
+      const tenantRecord = await this.findTenantRecord(baseStore, tenantId)
+
+      console.log(`tenantRecord: ${JSON.stringify(tenantRecord)}`)
+
+      if (!tenantRecord) {
+        throw new Error(`Tenant record not found for tenant: ${tenantId} `)
+      }
+
+      const tenantConfig = await this.extractTenantConfig(tenantRecord)
+      const tenantWalletKey = tenantConfig.walletConfig?.key
+      console.debug(`Tenant Key: ${tenantWalletKey}`)
+
+      if (!tenantWalletKey) {
+        throw new Error('Tenant wallet key not found in tenant record')
+      }
+
+      const tenantStore = await Store.open({
+        uri: askarWalletConfig.uri,
+        keyMethod: askarWalletConfig.keyMethod,
+        passKey: askarWalletConfig.passKey,
+        profile: `tenant-${tenantId}`,
+      })
+      console.log(`tenantStore: ${JSON.stringify(tenantStore)}`)
+
+      if (!tenantStore) {
+        throw new Error('Tenant Store not found')
+      }
+
+      // Open new SQLite store for export (dedicated agent)
+      // const exportStore = await Store.provision({
+      //   uri: `sqlite://${exportPath}`,
+      //   keyMethod: askarWalletConfig.keyMethod,
+      //   passKey: tenantWalletKey,
+      //   recreate: true,
+      // })
+
+      // Fetch all records in tenant profile
+
+      const ASKAR_CATEGORIES = [
+        'config',
+        'connection',
+        'credential',
+        'link_secret',
+        'migrated',
+        'presentation',
+        'profile',
+        'record',
+        'setting',
+        'wallet',
+        'key',
+        'did',
+        'revocation',
+        'schema',
+        'Aries::DidRecord',
+        'Aries::ConnectionRecord',
+        'Aries::CredentialRecord',
+        'Aries::ProofRecord',
+        'Aries::SchemaRecord',
+        'Aries::CredentialDefinitionRecord',
+        'Aries::RevocationRegistryDefinitionRecord',
+        'Aries::RevocationRegistryRecord',
+        'Aries::TailsFileRecord',
+        'Aries::MediatorRecord',
+        'Aries::RoutingRecord',
+        'Aries::W3cCredentialRecord',
+        'Aries::W3cVerifiableCredentialRecord',
+      ]
+
+      const baseSession = await baseStore.openSession()
+      const baseRecordsWithSession = []
+      for (const category of ASKAR_CATEGORIES) {
+        const records = await baseSession.fetchAll({ category: category, isJson: true })
+        baseRecordsWithSession.push(records)
+      }
+      console.log(`Base Records with session: ${JSON.stringify(baseRecordsWithSession)}`)
+
+
+      const baseRecords = []
+      for (const category of ASKAR_CATEGORIES) {
+        const scanner = baseStore.scan({ category: category })
+        const records = await scanner.fetchAll()
+        for await (const record of records) {
+          baseRecords.push(record)
+        }
+      }
+      console.log(`Base Records without session: ${JSON.stringify(baseRecords)}`)
+
+
+      const session = await tenantStore.openSession()
+      const tenantRecordsWithSession = []
+      for (const category of ASKAR_CATEGORIES) {
+        const records = await session.fetchAll({ category: category })
+        for (const record of records){
+          tenantRecordsWithSession.push(records)
+        } 
+      }
+      console.log(`Tenant Records with session: ${JSON.stringify(tenantRecordsWithSession)}`)
+
+
+      const tenantRecords = []
+      for (const category of ASKAR_CATEGORIES) {
+        const scanner = await tenantStore.scan({ category: category })
+        const records = await scanner.fetchAll()
+        for await (const record of records) {
+          tenantRecords.push(record)
+        }
+      }
+      console.log(`Tenant Records without session: ${JSON.stringify(tenantRecords)}`)
+
+      // Extract only the required profiles
+      const profiles = await tenantStore.listProfiles()
+      console.log(`Tenant Store Profiles: ${JSON.stringify(profiles)}`)
+
+      for (const profile in profiles) {
+        if (profile !== `tenant-${tenantId}`) {
+          await tenantStore.removeProfile(profile)
+        }
+      }
+
+      const mainProfiles = await tenantStore.listProfiles()
+      console.log(`Tenant Store Profiles after filter: ${JSON.stringify(mainProfiles)}`)
+
+      // Generate export filename with timestamp
+      const exportDir = './tmp/exports'
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const dbFilename = `${tenantId}-wallet-${timestamp}.db`
+      const exportPath = path.join(exportDir, dbFilename)
+
+      console.log(`Starting export to: ${exportPath}`)
+      await tenantStore.copyTo({
+        uri: `sqlite://${exportPath}`,
+        keyMethod: askarWalletConfig.keyMethod,
+        passKey: tenantWalletKey,
+        recreate: false,
+      })
+      console.log(`Export completed: ${exportPath}`)
+   
+      await tenantStore.close()
+    } catch (error) {
+      return internalServerError(500, { message: `Something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/import-tenant')
+  public async importTenant() {
+    const walletConfig = await this.agent.wallet.walletConfig
+
+    if (!walletConfig) {
+      throw new Error('Wallet config not found')
+    }
+
+    const askarWalletConfig = await this.getAskarWalletConfig(walletConfig)
+
+    const sqliteStore = await Store.open({
+      uri: `sqlite://ba2ed77f-2545-4b1e-b8b5-090b10c7d678-wallet.db`,
+      keyMethod: askarWalletConfig.keyMethod,
+      passKey: askarWalletConfig.passKey,
+    })
+
+    await sqliteStore.copyTo({
+      uri: askarWalletConfig.uri,
+      keyMethod: askarWalletConfig.keyMethod,
+      passKey: askarWalletConfig.passKey,
+      recreate: true,
+    })
+
+    await sqliteStore.close()
+
+    const newStore = await Store.open({
+      uri: askarWalletConfig.uri,
+      keyMethod: askarWalletConfig.keyMethod,
+      passKey: askarWalletConfig.passKey,
+    })
+
+    // newStore.setDefaultProfile(`tenant-ba2ed77f-2545-4b1e-b8b5-090b10c7d678`)
+
+    await newStore.close()
+  }
+
+  private async getAskarWalletConfig(walletConfig: WalletConfig) {
+    const { uri, path } = uriFromWalletConfig(walletConfig, '')
+
+    return {
+      uri,
+      path,
+      profile: walletConfig.id,
+      keyMethod: keyDerivationMethodToStoreKeyMethod(
+        walletConfig.keyDerivationMethod ?? KeyDerivationMethod.Argon2IMod
+      ),
+      passKey: walletConfig.key,
+    }
+  }
+
+  private async findTenantRecord(baseStore: Store, tenantId: string) {
+    try {
+      const scan = baseStore.scan({
+        category: 'TenantRecord',
+      })
+
+      const data = await scan.fetchAll()
+      console.log(`Found ${data.length} tenant records`)
+      console.debug(`Data: ${JSON.stringify(data)}`)
+
+      const tenantRecord = data.find((rec) => rec.name === tenantId)
+
+      if (!tenantRecord) {
+        // Also try with tenant- prefix in case it's stored differently
+        const altTenantRecord = data.find((rec) => rec.name === `tenant-${tenantId}`)
+        return altTenantRecord
+      }
+      return tenantRecord
+    } catch (error) {
+      console.error('Error finding tenant record:', error)
+      throw new Error(`Failed to scan tenant records: ${error}`)
+    }
+  }
+
+  private extractTenantConfig(tenantRecord: any) {
+    try {
+      const recordValue = tenantRecord.value.toString()
+      const tenantData = JSON.parse(recordValue)
+      
+      console.log('Tenant data structure:', Object.keys(tenantData))
+      
+      // Handle different possible structures
+      if (tenantData.config?.walletConfig) {
+        return tenantData.config
+      } else if (tenantData.walletConfig) {
+        return tenantData
+      } else {
+        throw new Error('Wallet config not found in tenant record structure')
+      }
+    } catch (error) {
+      console.error('Error parsing tenant record:', error)
+      throw new Error(`Failed to parse tenant configuration: ${error}`)
     }
   }
 }
