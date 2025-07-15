@@ -595,6 +595,22 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Get('/checkCloudWalletExists/:tenantId')
+  public async getCloudWallet(@Path('tenantId') tenantId: string) {
+    try {
+      const tenant = await this.agent.modules.tenants.getTenantById(tenantId)
+      if (tenant) {
+        return 'Tenant exists'
+      } else {
+        this.setStatus(404)
+        return 'Tenant does not exist'
+      }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Post('/transactions/set-endorser-role/:tenantId')
   public async didNymTransaction(@Path('tenantId') tenantId: string, @Body() didNymTransaction: DidNymTransaction) {
     let didCreateSubmitResult
