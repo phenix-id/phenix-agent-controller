@@ -4299,6 +4299,45 @@
 				]
 			}
 		},
+		"/multi-tenancy/checkCloudWalletExists/{tenantId}": {
+			"get": {
+				"operationId": "GetCloudWallet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+									"enum": [
+										"Tenant exists",
+										"Tenant does not exist"
+									]
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/multi-tenancy/transactions/set-endorser-role/{tenantId}": {
 			"post": {
 				"operationId": "DidNymTransaction",
@@ -6130,6 +6169,34 @@
 								}
 							}
 						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/multi-tenancy/export/{tenantId}": {
+			"post": {
+				"operationId": "ExportCloudWalletTenantById",
+				"responses": {
+					"204": {
+						"description": "No content"
 					}
 				},
 				"tags": [
