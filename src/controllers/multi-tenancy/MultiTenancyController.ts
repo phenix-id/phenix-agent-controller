@@ -16,6 +16,9 @@ import type {
   Routing,
   AcceptProofRequestOptions,
   DeclineProofRequestOptions,
+  W3cCredentialOptions,
+  W3cCredentialSubjectOptions,
+  W3cJsonLdSignCredentialOptions,
 } from '@credo-ts/core'
 import type { IndyVdrDidCreateOptions, IndyVdrDidCreateResult } from '@credo-ts/indy-vdr'
 import type { QuestionAnswerRecord, ValidResponse } from '@credo-ts/question-answer'
@@ -49,6 +52,8 @@ import {
   DidRepository,
   W3cCredentialRecord,
   SelectCredentialsForProofRequestOptions,
+  W3cJsonLdVerifiableCredential,
+  ClaimFormat,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -85,6 +90,7 @@ import {
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
   CreateSchemaInput,
+  selfAttestedJsonLdCredentialOptions,
 } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
@@ -1415,6 +1421,97 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Post('/credentials/w3c/self-attested/:tenantId')
+  public async createW3cSelfAttestedCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() selfAttestedCredentialOptions: selfAttestedJsonLdCredentialOptions
+  ) {
+    let selfAttestedStoredCredential
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        // Get default DID of the tenant
+        const didRepository = await tenantAgent.dependencyManager.resolve(DidRepository)
+        const defaultDidRecord = await didRepository.findSingleByQuery(tenantAgent.context, {
+          isDefault: true,
+        })
+        const selfDid = defaultDidRecord?.did
+        const selfDidVerificationMethod = defaultDidRecord?.didDocument?.verificationMethod?.[0]?.id
+
+        if (!selfDid) {
+          throw new NotFoundError('Default DID not found')
+        }
+        if (!selfDidVerificationMethod) {
+          throw new Error('Default DID Verification method is missing or undefined')
+        }
+
+        const {
+          credentialSubject: selfAttestedSubjectOptions,
+          proofType: selfAttestedProofType,
+          ...selfAttestedOptions
+        } = selfAttestedCredentialOptions
+
+        const selfAttestedSubject: W3cCredentialSubjectOptions = {
+          id: selfDid,
+          ...selfAttestedSubjectOptions,
+        }
+        const selfAttestedW3cCredential: W3cCredentialOptions = {
+          ...selfAttestedOptions,
+          issuer: selfDid,
+          issuanceDate: new Date().toISOString(),
+          credentialSubject: selfAttestedSubject,
+        }
+        const selfAttestedJsonLdCredential: W3cJsonLdSignCredentialOptions = {
+          format: ClaimFormat.LdpVc,
+          // @ts-ignore W3cCredential not used since optional expirationDate is failing
+          // credential: new W3cCredential(selfAttestedW3cCredential),
+          credential: { ...selfAttestedW3cCredential },
+          proofType: selfAttestedProofType,
+          verificationMethod: selfDidVerificationMethod,
+        }
+        const signedCred = await tenantAgent.w3cCredentials.signCredential(selfAttestedJsonLdCredential)
+        const selfAttestedVC = JsonTransformer.fromJSON(signedCred, W3cJsonLdVerifiableCredential)
+        selfAttestedStoredCredential = await tenantAgent.w3cCredentials.storeCredential({ credential: selfAttestedVC })
+      })
+      return selfAttestedStoredCredential
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Get('/credentials/w3c/:tenantId')
+  public async getAllW3cCredentials(@Path('tenantId') tenantId: string) {
+    let credentialRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const credentials = await tenantAgent.w3cCredentials.getAllCredentialRecords()
+        credentialRecord = credentials.map((c: any) => c.toJSON())
+      })
+      return credentialRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Get('/credentials/w3c/:tenantId/:credentialRecordId')
+  public async getW3cCredential(
+    @Path('tenantId') tenantId: string,
+    @Path('credentialRecordId') credentialRecordId: string
+  ) {
+    let credentialRecord
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const credential = await tenantAgent.w3cCredentials.getCredentialRecordById(credentialRecordId)
+        credentialRecord = credential.toJSON()
+      })
+      return credentialRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Post('/credentials/accept-offer/:tenantId')
   public async acceptOffer(
     @Path('tenantId') tenantId: string,
@@ -1516,6 +1613,23 @@ export class MultiTenancyController extends Controller {
       })
 
       return { message: 'Credential Deleted Successfully' }
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Delete('/credential/w3c/:credentialRecordId/:tenantId')
+  public async deleteW3cCredentialById(
+    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Path('tenantId') tenantId: string
+  ) {
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        await tenantAgent.w3cCredentials.removeCredentialRecord(credentialRecordId)
+      })
+
+      return { message: 'W3C Credential Deleted Successfully' }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

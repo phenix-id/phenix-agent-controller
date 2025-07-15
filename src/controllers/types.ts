@@ -25,7 +25,9 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  JsonObject,
 } from '@credo-ts/core'
+import type { SingleOrArray } from '@credo-ts/core/build/utils'
 import type { DIDDocument } from 'did-resolver'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
@@ -130,6 +132,13 @@ export interface CreateProofRequestOobOptions {
   imageUrl?: string
   recipientKey?: string
   invitationDid?: string
+}
+
+export interface selfAttestedJsonLdCredentialOptions {
+  '@context': Array<string | JsonObject>
+  type: Array<string>
+  credentialSubject: SingleOrArray<JsonObject>
+  proofType: string
 }
 
 export interface OfferCredentialOptions {
