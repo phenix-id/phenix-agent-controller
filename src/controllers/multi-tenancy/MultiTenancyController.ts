@@ -50,6 +50,7 @@ import {
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
+import { EthrDidCreateOptions } from 'ethr-did'
 import * as fs from 'fs'
 
 import { CredentialEnum, DidMethod, Network, Role } from '../../enums/enum'
@@ -155,6 +156,10 @@ export class MultiTenancyController extends Controller {
 
         case DidMethod.Peer:
           result = await this.handleDidPeer(createDidOptions, tenantId)
+          break
+
+        case DidMethod.Ethereum:
+          result = await this.handleEthereum(createDidOptions)
           break
 
         default:
@@ -562,6 +567,33 @@ export class MultiTenancyController extends Controller {
         didDoc: createDidResponse?.didState?.didDocument,
       }
     })
+    return didResponse
+  }
+
+  public async handleEthereum(createDidOptions: DidCreate) {
+    const { endpoint, network, privatekey } = createDidOptions
+    const networkName = network?.split(':')[1]
+    if (networkName !== 'mainnet' && networkName !== 'testnet') {
+      throw Error('Invalid network type')
+    }
+    if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
+      throw Error('Invalid private key or not supported')
+    }
+
+    const createDidResponse = await this.agent.dids.create<EthrDidCreateOptions>({
+      method: 'ethereum',
+      options: {
+        network: networkName,
+        endpoint,
+      },
+      secret: {
+        privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
+      },
+    })
+    const didResponse = {
+      did: createDidResponse?.didState?.did,
+      didDoc: createDidResponse?.didState?.didDocument,
+    }
     return didResponse
   }
 

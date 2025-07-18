@@ -14,6 +14,7 @@ export enum DidMethod {
   Web = 'web',
   Polygon = 'polygon',
   Peer = 'peer',
+  Ethereum = 'ethr',
 }
 
 export enum Network {
