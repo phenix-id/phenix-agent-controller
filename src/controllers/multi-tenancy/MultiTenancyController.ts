@@ -159,7 +159,7 @@ export class MultiTenancyController extends Controller {
           break
 
         case DidMethod.Ethereum:
-          result = await this.handleEthereum(createDidOptions)
+          result = await this.handleEthereum(createDidOptions, tenantId)
           break
 
         default:
@@ -570,30 +570,39 @@ export class MultiTenancyController extends Controller {
     return didResponse
   }
 
-  public async handleEthereum(createDidOptions: DidCreate) {
-    const { endpoint, network, privatekey } = createDidOptions
-    const networkName = network?.split(':')[1]
-    if (networkName !== 'mainnet' && networkName !== 'testnet') {
-      throw Error('Invalid network type')
-    }
-    if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
-      throw Error('Invalid private key or not supported')
-    }
+  public async handleEthereum(createDidOptions: DidCreate, tenantId: string) {
+    let createDidResponse
+    let didResponse
+    await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+      // need to discuss try catch logic
 
-    const createDidResponse = await this.agent.dids.create<EthereumDidCreateOptions>({
-      method: 'ethr',
-      options: {
-        network: networkName,
-        endpoint,
-      },
-      secret: {
-        privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
-      },
+      const networkDetails = createDidOptions.network
+      const networkName = networkDetails?.split(':')[1]
+
+      const { endpoint, privatekey } = createDidOptions
+      if (networkName !== 'mainnet' && networkName !== 'sepolia') {
+        throw Error('Invalid network type')
+      }
+      if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
+        throw Error('Invalid private key or not supported')
+      }
+      this.agent.config.logger.info("creating did-ether")
+
+      createDidResponse = await tenantAgent.dids.create<EthereumDidCreateOptions>({
+        method: DidMethod.Ethereum,
+        options: {
+          network: networkName,
+          endpoint,
+        },
+        secret: {
+          privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
+        },
+      })
+      didResponse = {
+        did: createDidResponse?.didState?.did,
+        didDoc: createDidResponse?.didState?.didDocument,
+      }
     })
-    const didResponse = {
-      did: createDidResponse?.didState?.did,
-      didDoc: createDidResponse?.didState?.didDocument,
-    }
     return didResponse
   }
 
