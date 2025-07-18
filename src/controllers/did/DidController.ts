@@ -435,7 +435,7 @@ export class DidController extends Controller {
     if (networkName !== 'mainnet' && networkName !== 'sepolia') {
       throw Error('Invalid network type')
     }
-    if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
+    if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim()) {
       throw Error('Invalid private key or not supported')
     }
 
