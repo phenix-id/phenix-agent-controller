@@ -198,14 +198,16 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       serverUrl: 'https://dev-schema.ngotag.com',
     }),
     ethereum: new EthereumModule({
-      didContractAddress: '0x485cFb9cdB84c0a5AfE69b75E2e79497Fc2256Fc',
-      schemaManagerContractAddress: '0x8f3db5523620278C47b0cAf6353Ee32C5eDa95bF',
-      fileServerToken:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6IjliZjNiODFlLTA0ZDEtNDdmYy1iZTIwLWE2MTBiZDE5NTZlZiJ9.suWGau_pvNhGSGHRMqomqWoYhwMA7pcRt0kyHhaRZhM',
-      rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/XUo--fMnn250sIOxldOhx1J9-rput18B',
-      serverUrl: 'https://dev-schema.ngotag.com',
-      networkName: 'sepolia',
-      chainNameOrId: '11155111',
+      config: {
+        networks: [
+          {
+            name: 'sepolia',
+            chainId: 11155111,
+            rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/XUo--fMnn250sIOxldOhx1J9-rput18B',
+            registry: '0x485cFb9cdB84c0a5AfE69b75E2e79497Fc2256Fc',
+          },
+        ],
+      },
     }),
   }
 }
