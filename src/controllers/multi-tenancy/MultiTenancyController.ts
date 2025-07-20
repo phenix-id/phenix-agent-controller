@@ -1,8 +1,8 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
 import type { RecipientKeyOption, SchemaMetadata } from '../types'
-import type { EthereumDidCreateOptions } from '@ankitaawts/credo-ethr-module/build/dids'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { EthereumDidCreateOptions } from '@bhutan-ndi/credo-ethr-module/build/dids'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
@@ -1046,6 +1046,63 @@ export class MultiTenancyController extends Controller {
 
       const schemaResponse = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         return await tenantAgent.modules.polygon.createSchema({
+          did,
+          schemaName,
+          schema,
+        })
+      })
+
+      if (schemaResponse.schemaState?.state === 'failed') {
+        const reason = schemaResponse.schemaState?.reason?.toLowerCase()
+        if (reason && reason.includes('insufficient') && reason.includes('funds')) {
+          throw new Error('Insufficient funds to the address, Please add funds to perform this operation')
+        } else {
+          throw new Error(schemaResponse.schemaState?.reason)
+        }
+      }
+
+      const configFileData = fs.readFileSync('config.json', 'utf-8')
+      const config = JSON.parse(configFileData)
+      if (!config.schemaFileServerURL) {
+        throw new Error('Please provide valid schema file server URL')
+      }
+
+      if (!schemaResponse?.schemaId) {
+        throw new Error('Invalid schema response')
+      }
+      const schemaPayload: SchemaMetadata = {
+        schemaUrl: config.schemaFileServerURL + schemaResponse?.schemaId,
+        did: schemaResponse?.did,
+        schemaId: schemaResponse?.schemaId,
+        schemaTxnHash: schemaResponse?.resourceTxnHash,
+      }
+
+      return schemaPayload
+    } catch (error) {
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/ethereum-wc3/schema/:tenantId')
+  public async createEthereumW3CSchema(
+    @Body()
+    createSchemaRequest: {
+      did: string
+      schemaName: string
+      schema: { [key: string]: any }
+    },
+    @Path('tenantId') tenantId: string,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ): Promise<SchemaMetadata> {
+    try {
+      const { did, schemaName, schema } = createSchemaRequest
+      if (!did || !schemaName || !schema) {
+        throw Error('One or more parameters are empty or undefined.')
+      }
+
+      const schemaResponse = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        return await tenantAgent.modules.ethereum.createSchema({
           did,
           schemaName,
           schema,
