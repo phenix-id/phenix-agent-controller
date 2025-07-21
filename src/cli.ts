@@ -199,5 +199,8 @@ export async function runCliServer() {
     rpcUrl: parsed['rpcUrl'],
     fileServerUrl: parsed['fileServerUrl'],
     fileServerToken: parsed['fileServerToken'],
+    chainId: parsed['chainId'],
+    name: parsed['chainName'],
+    registry: parsed['registry'],
   } as unknown as AriesRestConfig)
 }
