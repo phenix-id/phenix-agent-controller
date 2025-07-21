@@ -44,7 +44,7 @@
 
 
 # Stage 1: Builder stage
-FROM node:18.19.0--bookworm AS builder
+FROM node:18.19.0-bookworm AS builder
 
 WORKDIR /app
 
