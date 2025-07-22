@@ -8,7 +8,7 @@ import type {
   SignDataOptions,
 } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
-import type { EthereumDidCreateOptions } from '@bhutan-ndi/credo-ethr-module/build/dids'
+import type { EthereumDidCreateOptions } from '@bhutan-ndi/ndi-credo-ethr-module/build/dids'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
@@ -1137,7 +1137,7 @@ export class MultiTenancyController extends Controller {
         schemaUrl: config.schemaFileServerURL + schemaResponse?.schemaId,
         did: schemaResponse?.did,
         schemaId: schemaResponse?.schemaId,
-        schemaTxnHash: schemaResponse?.resourceTxnHash,
+        // schemaTxnHash: schemaResponse?.resourceTxnHash,
       }
 
       return schemaPayload

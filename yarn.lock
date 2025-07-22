@@ -420,18 +420,19 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bhutan-ndi/credo-ethr-module@0.0.1-alpha-8":
-  version "0.0.1-alpha-8"
-  resolved "https://registry.yarnpkg.com/@bhutan-ndi/credo-ethr-module/-/credo-ethr-module-0.0.1-alpha-8.tgz#6bf93c601c8fd4eb13cb9ab23c1b250b38ddeb3d"
-  integrity sha512-GAda3Ave4pe8CFK9dZJnNAilKDdASlVg4FyvbyBJOi4LZPTMLzW/yMarDPm4+E/vZzXWwUK677FiJmbwM9gC6w==
+"@bhutan-ndi/ndi-credo-ethr-module@0.0.1-alpha":
+  version "0.0.1-alpha"
+  resolved "https://registry.yarnpkg.com/@bhutan-ndi/ndi-credo-ethr-module/-/ndi-credo-ethr-module-0.0.1-alpha.tgz#493f605643498c9adb83543714b31c83df7bf898"
+  integrity sha512-nUVIMK/8BFA9O4+wMeMn/dtfeESwLpgDBl7GW7n+v3Oi6fQrRec2MzLxj5ccUKSNkC+Qu404ZutY0pdlqkjS/g==
   dependencies:
-    "@ayanworks/polygon-schema-manager" "1.0.0"
     "@credo-ts/askar" "0.5.3"
     "@credo-ts/core" "0.5.3"
+    axios "^1.6.3"
     did-resolver "^4.1.0"
     ethers "^6.9.0"
     ethr-did "^3.0.38"
     ethr-did-resolver "^11.0.4"
+    keccak256 "^1.0.6"
 
 "@credo-ts/anoncreds@0.5.3":
   version "0.5.3"
