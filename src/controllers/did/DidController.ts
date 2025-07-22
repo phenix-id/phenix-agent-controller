@@ -1,6 +1,6 @@
 import type { DidResolutionResultProps } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
-import type { EthereumDidCreateOptions } from '@bhutan-ndi/credo-ethr-module/build/dids'
+import type { EthereumDidCreateOptions } from '@bhutan-ndi/ndi-credo-ethr-module/build/dids'
 import type { KeyDidCreateOptions } from '@credo-ts/core'
 
 import {
