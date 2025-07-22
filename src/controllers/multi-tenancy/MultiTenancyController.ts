@@ -1131,7 +1131,7 @@ export class MultiTenancyController extends Controller {
         schemaUrl: config.schemaFileServerURL + schemaResponse?.schemaId,
         did: schemaResponse?.did,
         schemaId: schemaResponse?.schemaId,
-        schemaTxnHash: schemaResponse?.resourceTxnHash,
+        // schemaTxnHash: schemaResponse?.resourceTxnHash,
       }
 
       return schemaPayload
