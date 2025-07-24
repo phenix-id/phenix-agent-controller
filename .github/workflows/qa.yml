@@ -3,7 +3,7 @@ name: Build and deploy credo on QA
 on:
   push:
     tags:
-      - 'qa*'
+      - 'qa-*'
   
     
 env:
@@ -25,8 +25,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.19.0
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -47,9 +52,12 @@ jobs:
           ECR_REPOSITORY: qa-services
           IMAGE_TAG: "CREDO_V_${{ github.run_number }}"
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG  .
+          docker buildx build \
+            --platform linux/amd64 \
+            --output type=docker \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker image list
           
       - name: Set environment variables
         run: |
@@ -80,15 +88,15 @@ jobs:
           echo "SERVICE_NAME: $SERVICE_NAME"
 
           # Replace placeholders in the JSON file
-          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/qa-credo-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" taskdef/qa-credo-service.json > "${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json"
  
           # Debug: Print the content of the modified JSON file
-          cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+          cat "${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json"
 
           # Register the task definition using the modified JSON file
-          aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
+          aws ecs register-task-definition --family "${FAMILY}" --cli-input-json file://"${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json" --region "${{ env.AWS_REGION }}"
       
-          SERVICE_INFO=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ap-southeast-1)
+          SERVICE_INFO=$(aws ecs describe-services --services "${SERVICE_NAME}" --cluster "${CLUSTER}" --region ap-southeast-1)
 
           # Check if the service exists
            if [ -z "$SERVICE_INFO" ]; then

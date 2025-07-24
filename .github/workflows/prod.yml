@@ -3,7 +3,7 @@ name: Build and deploy CREDO STAGE to ECS
 on:
   push:
     tags:
-      - 'prod*'
+      - 'pr'
    
     
 env:

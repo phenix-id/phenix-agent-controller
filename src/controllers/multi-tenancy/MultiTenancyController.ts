@@ -1,6 +1,12 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
-import type { RecipientKeyOption, SchemaMetadata } from '../types'
+import type {
+  CustomW3cJsonLdSignCredentialOptions,
+  RecipientKeyOption,
+  SafeW3cJsonLdVerifyCredentialOptions,
+  SchemaMetadata,
+  SignDataOptions,
+} from '../types'
 import type { EthereumDidCreateOptions } from '@ayanworks/credo-ethr-module/build/dids'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
 import type {
@@ -48,6 +54,7 @@ import {
   injectable,
   createPeerDidDocumentFromServices,
   PeerDidNumAlgo,
+  W3cJsonLdVerifiableCredential,
 } from '@credo-ts/core'
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
@@ -68,7 +75,6 @@ import {
   WriteTransaction,
   CreateProofRequestOobOptions,
   CreateOfferOobOptions,
-  SignDataOptions,
   VerifyDataOptions,
 } from '../types'
 
@@ -2157,16 +2163,56 @@ export class MultiTenancyController extends Controller {
   @Post('/sign/:tenantId')
   public async sign(
     @Path('tenantId') tenantId: string,
-    @Body() request: SignDataOptions,
+    @Body() request: CustomW3cJsonLdSignCredentialOptions | SignDataOptions | any,
+    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const signature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         assertAskarWallet(tenantAgent.context.wallet)
+
+        // Raw Data Signing
+        const rawData = request as SignDataOptions
+
+        if (!rawData.data) return notFoundError(404, { reason: `Missing "data" for raw data signing` })
+
+        const hasDidOrMethod = rawData.did || rawData.method
+        const hasPublicKey = rawData.publicKeyBase58 && rawData.keyType
+
+        if (!hasDidOrMethod && !hasPublicKey) {
+          return badRequestError(400, {
+            reason: `Either (did or method) OR (publicKeyBase58 and keyType) must be provided.`,
+          })
+        }
+
+        let keyToUse: Key
+
+        if (hasDidOrMethod) {
+          const dids = await tenantAgent.dids.getCreatedDids({
+            method: rawData.method || undefined,
+            did: rawData.did || undefined,
+          })
+
+          const verificationMethod = dids[0]?.didDocument?.verificationMethod?.[0]?.publicKeyBase58
+          if (!verificationMethod) {
+            return badRequestError(400, {
+              reason: `No publicKeyBase58 found for the given DID or method.`,
+            })
+          }
+
+          keyToUse = Key.fromPublicKeyBase58(verificationMethod, rawData.keyType)
+        } else {
+          keyToUse = Key.fromPublicKeyBase58(rawData.publicKeyBase58, rawData.keyType)
+        }
+
+        if (!keyToUse) {
+          throw new Error('Unable to construct signing key.')
+        }
+
         const signature = await tenantAgent.context.wallet.sign({
-          data: TypedArrayEncoder.fromBase64(request.data),
-          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+          data: TypedArrayEncoder.fromBase64(rawData.data),
+          key: keyToUse,
         })
         return TypedArrayEncoder.toBase64(signature)
       })
@@ -2194,15 +2240,48 @@ export class MultiTenancyController extends Controller {
   public async verify(
     @Path('tenantId') tenantId: string,
     @Body() request: VerifyDataOptions,
+    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
     @Res() notFoundError: TsoaResponse<404, { reason: string }>,
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
       const isValidSignature = await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         assertAskarWallet(tenantAgent.context.wallet)
+
+        const hasDidOrMethod = request.did || request.method
+        const hasPublicKey = request.publicKeyBase58 && request.keyType
+
+        if (!hasDidOrMethod && !hasPublicKey) {
+          return badRequestError(400, {
+            reason: `Either (did or method) OR (publicKeyBase58 and keyType) must be provided.`,
+          })
+        }
+
+        let keyToUse: Key
+
+        if (hasDidOrMethod) {
+          const dids = await tenantAgent.dids.getCreatedDids({
+            method: request.method || undefined,
+            did: request.did || undefined,
+          })
+          const verificationMethod = dids[0]?.didDocument?.verificationMethod?.[0]?.publicKeyBase58
+          if (!verificationMethod) {
+            return badRequestError(400, {
+              reason: `No publicKeyBase58 found for the given DID or method.`,
+            })
+          }
+          keyToUse = Key.fromPublicKeyBase58(verificationMethod, request.keyType)
+        } else {
+          keyToUse = Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType)
+        }
+
+        if (!keyToUse) {
+          throw new Error('Unable to construct key.')
+        }
+
         const isValidSignature = await tenantAgent.context.wallet.verify({
           data: TypedArrayEncoder.fromBase64(request.data),
-          key: Key.fromPublicKeyBase58(request.publicKeyBase58, request.keyType),
+          key: keyToUse,
           signature: TypedArrayEncoder.fromBase64(request.signature),
         })
         return isValidSignature
@@ -2213,6 +2292,34 @@ export class MultiTenancyController extends Controller {
         return notFoundError(404, { reason: `record with key "${request.publicKeyBase58}" not found.` })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/credential/verify/:tenantId')
+  public async verifyCredential(
+    @Path('tenantId') tenantId: string,
+    @Body() credentialToVerify: SafeW3cJsonLdVerifyCredentialOptions | any,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    let formattedCredential
+    try {
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { credential, ...credentialOptions } = credentialToVerify
+        const transformedCredential = JsonTransformer.fromJSON(
+          credentialToVerify?.credential,
+          W3cJsonLdVerifiableCredential
+        )
+        const signedCred = await tenantAgent.w3cCredentials.verifyCredential({
+          credential: transformedCredential,
+          ...credentialOptions,
+        })
+        formattedCredential = signedCred
+      })
+      return formattedCredential
+    } catch (error) {
+      return internalServerError(500, { message: `Something went wrong: ${error}` })
     }
   }
 }
