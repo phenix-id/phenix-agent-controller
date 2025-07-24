@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@ayanworks/credo-polygon-w3c-module": "1.0.0",
-    "@bhutan-ndi/ndi-credo-ethr-module": "0.0.1-alpha",
+    "@ayanworks/credo-ethr-module": "0.0.1",
     "@credo-ts/anoncreds": "0.5.3",
     "@credo-ts/askar": "0.5.3",
     "@credo-ts/core": "0.5.3",

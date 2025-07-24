@@ -1,8 +1,8 @@
 import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAgent'
 import type { Version } from '../examples'
 import type { RecipientKeyOption, SchemaMetadata } from '../types'
+import type { EthereumDidCreateOptions } from '@ayanworks/credo-ethr-module/build/dids'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
-import type { EthereumDidCreateOptions } from '@bhutan-ndi/ndi-credo-ethr-module/build/dids'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
