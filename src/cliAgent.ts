@@ -2,6 +2,8 @@ import type { InitConfig } from '@credo-ts/core'
 import type { WalletConfig } from '@credo-ts/core/build/types'
 import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { EthereumDidRegistrar, EthereumDidResolver, EthereumModule } from '@ayanworks/credo-ethr-module'
 import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsCredentialFormatService,
@@ -132,8 +134,19 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
 
     dids: new DidsModule({
-      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar(), new PolygonDidRegistrar()],
-      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver(), new PolygonDidResolver()],
+      registrars: [
+        new IndyVdrIndyDidRegistrar(),
+        new KeyDidRegistrar(),
+        new PolygonDidRegistrar(),
+        new EthereumDidRegistrar(),
+      ],
+      resolvers: [
+        new IndyVdrIndyDidResolver(),
+        new KeyDidResolver(),
+        new WebDidResolver(),
+        new PolygonDidResolver(),
+        new EthereumDidResolver(),
+      ],
     }),
 
     anoncreds: new AnonCredsModule({
@@ -172,7 +185,7 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
     }),
     w3cCredentials: new W3cCredentialsModule(),
     cache: new CacheModule({
-      cache: new InMemoryLruCache({ limit: Infinity }),
+      cache: new InMemoryLruCache({ limit: 2147483647 }),
     }),
 
     questionAnswer: new QuestionAnswerModule(),
@@ -184,6 +197,23 @@ const getModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]) 
       rpcUrl: 'https://rpc-amoy.polygon.technology',
       serverUrl: 'https://dev-schema.ngotag.com',
     }),
+    ethereum: new EthereumModule({
+      config: {
+        networks: [
+          {
+            name: 'sepolia',
+            chainId: 11155111,
+            rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/XUo--fMnn250sIOxldOhx1J9-rput18B',
+            registry: '0x485cFb9cdB84c0a5AfE69b75E2e79497Fc2256Fc',
+          },
+        ],
+      },
+      schemaManagerContractAddress: '0x1930977f040844021f5C13b42AA8b296f0cb52DB',
+      serverUrl: 'https://dev-schema.ngotag.com',
+      fileServerToken:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBeWFuV29ya3MiLCJpZCI6ImU3NGFkMWQyLTY5NGYtNGI3Ny05Mjk2LWY5NTdhY2YxNGE4NSJ9.wNd6OUveLZlJoN5ys68lPOX8aSY1HwVJaMW4K36sY4k',
+      rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/XUo--fMnn250sIOxldOhx1J9-rput18B',
+    }),
   }
 }
 
@@ -191,8 +221,8 @@ const getWithTenantModules = (networkConfig: [IndyVdrPoolConfig, ...IndyVdrPoolC
   const modules = getModules(networkConfig)
   return {
     tenants: new TenantsModule<typeof modules>({
-      sessionAcquireTimeout: Infinity,
-      sessionLimit: Infinity,
+      sessionAcquireTimeout: 86400000,
+      sessionLimit: 2147483647,
     }),
     ...modules,
   }

@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@ayanworks/credo-polygon-w3c-module": "1.0.0",
+    "@ayanworks/credo-ethr-module": "0.0.1",
     "@credo-ts/anoncreds": "0.5.3",
     "@credo-ts/askar": "0.5.3",
     "@credo-ts/core": "0.5.3",
@@ -100,6 +101,6 @@
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": "18.19.0"
   }
 }

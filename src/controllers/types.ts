@@ -26,7 +26,12 @@ import type {
   Attachment,
   KeyType,
   JsonLdCredentialFormat,
+  W3cJsonLdVerifyCredentialOptions,
+  DataIntegrityProofOptions,
+  W3cJsonLdSignCredentialOptions,
 } from '@credo-ts/core'
+import type { LinkedDataProofOptions } from '@credo-ts/core/build/modules/vc/data-integrity/models/LinkedDataProof'
+import type { SingleOrArray } from '@credo-ts/core/build/utils'
 import type { DIDDocument } from 'did-resolver'
 
 export type TenantConfig = Pick<InitConfig, 'label' | 'connectionImageUrl'> & {
@@ -311,6 +316,7 @@ export interface DidCreate {
   didDocument?: DidDocument
   privatekey?: string
   endpoint?: string
+  address?: string
 }
 
 export interface CreateTenantOptions {
@@ -389,4 +395,30 @@ export interface SchemaMetadata {
   schemaId: string
   schemaTxnHash?: string
   schemaUrl?: string
+}
+
+export type SignDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+  did?: string
+  method?: string
+}
+
+export type VerifyDataOptions = {
+  data: string
+  keyType: KeyType
+  publicKeyBase58: string
+  signature: string
+  did?: string
+  method?: string
+}
+
+export interface SafeW3cJsonLdVerifyCredentialOptions extends W3cJsonLdVerifyCredentialOptions {
+  // Ommited due to issues with TSOA
+  proof: SingleOrArray<Omit<LinkedDataProofOptions, 'cryptosuite'> | DataIntegrityProofOptions>
+}
+
+export type CustomW3cJsonLdSignCredentialOptions = Omit<W3cJsonLdSignCredentialOptions, 'format'> & {
+  [key: string]: unknown
 }
