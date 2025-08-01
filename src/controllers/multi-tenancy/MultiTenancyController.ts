@@ -2,7 +2,6 @@ import type { RestAgentModules, RestMultiTenantAgentModules } from '../../cliAge
 import type { Version } from '../examples'
 import type { RecipientKeyOption, SchemaMetadata } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
-import type { AnonCredsProofFormatService, LegacyIndyProofFormatService, V1ProofProtocol } from '@credo-ts/anoncreds'
 import type {
   BasicMessageStorageProps,
   ConnectionRecordProps,
@@ -58,6 +57,7 @@ import {
 import { QuestionAnswerRole, QuestionAnswerState } from '@credo-ts/question-answer'
 import axios from 'axios'
 import * as fs from 'fs'
+import { connect, StringCodec } from 'nats'
 
 import { CredentialEnum, DidMethod, EndorserMode, Network, NetworkTypes, Role, SchemaError } from '../../enums/enum'
 import ErrorHandlingService from '../../errorHandlingService'
@@ -95,6 +95,7 @@ import {
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 // import { AcceptProofRequestOptions } from '@credo-ts/core/build/modules/proofs/protocol/ProofProtocolOptions'
+
 
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
@@ -1809,7 +1810,6 @@ export class MultiTenancyController extends Controller {
           comment: request.comment,
           proofFormats: requestedCredentials.proofFormats,
         }
-        console.log('acceptProofRequest from selectCredentialsForRequest:', JSON.stringify(acceptProofRequest, null, 2))
         const proof = await tenantAgent.proofs.acceptRequest(acceptProofRequest)
 
         proofRecord = proof.toJSON()
@@ -1951,6 +1951,27 @@ export class MultiTenancyController extends Controller {
     try {
       const deleteTenant = await this.agent.modules.tenants.deleteTenantById(tenantId)
       return JsonTransformer.toJSON(deleteTenant)
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Post('/export/:tenantId')
+  public async exportCloudWalletTenantById(@Path('tenantId') tenantId: string, @Body() body: { passKey: string }) {
+    try {
+      const NATS_URL = `${process.env.NATS_URL}`
+      const nc = await connect({ servers: NATS_URL })
+      const sc = StringCodec()
+      const walletConfig = this.agent.wallet.walletConfig
+      const msg = await nc.request(
+        'wallet.export_upload_s3',
+        sc.encode(JSON.stringify({ ...walletConfig, tenantId, passKey: body.passKey })),
+        {
+          timeout: 6000,
+        }
+      )
+      return { path: sc.decode(msg.data) }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
