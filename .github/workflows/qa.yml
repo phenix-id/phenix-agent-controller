@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'qa-*'
-  
-    
 env:
 
   ECR_IMAGE_TAG: "CREDO_V_${{ github.run_number }}"
