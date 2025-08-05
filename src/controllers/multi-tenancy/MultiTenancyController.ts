@@ -96,7 +96,6 @@ import {
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
 // import { AcceptProofRequestOptions } from '@credo-ts/core/build/modules/proofs/protocol/ProofProtocolOptions'
 
-
 @Tags('MultiTenancy')
 @Route('/multi-tenancy')
 @injectable()
@@ -1958,7 +1957,10 @@ export class MultiTenancyController extends Controller {
 
   @Security('apiKey')
   @Post('/export/:tenantId')
-  public async exportCloudWalletTenantById(@Path('tenantId') tenantId: string, @Body() body: { passKey: string }) {
+  public async exportCloudWalletTenantById(
+    @Path('tenantId') tenantId: string,
+    @Body() body: { passKey: string; walletID: string }
+  ) {
     try {
       const NATS_URL = `${process.env.NATS_URL}`
       const nc = await connect({ servers: NATS_URL })
@@ -1966,7 +1968,7 @@ export class MultiTenancyController extends Controller {
       const walletConfig = this.agent.wallet.walletConfig
       const msg = await nc.request(
         'wallet.export_upload_s3',
-        sc.encode(JSON.stringify({ ...walletConfig, tenantId, passKey: body.passKey })),
+        sc.encode(JSON.stringify({ ...walletConfig, tenantId, passKey: body.passKey, walletID: body.walletID })),
         {
           timeout: 6000,
         }
