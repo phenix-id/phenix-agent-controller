@@ -44,20 +44,6 @@
   dependencies:
     static-eval "2.0.2"
 
-"@ayanworks/credo-ethr-module@0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@ayanworks/credo-ethr-module/-/credo-ethr-module-0.0.1.tgz#ea4f7741aae72a51dd7e2a5737e5c87b670c772d"
-  integrity sha512-KbuSGertPYttBx1CEUFA/wjC0EolL7fTegVtsBAlCKGNynIf9XGyjIDLgtjBmlptEq2R0a2nxJ9ErScLTY4BVQ==
-  dependencies:
-    "@credo-ts/askar" "0.5.3"
-    "@credo-ts/core" "0.5.3"
-    axios "^1.6.3"
-    did-resolver "^4.1.0"
-    ethers "^6.9.0"
-    ethr-did "^3.0.38"
-    ethr-did-resolver "^11.0.4"
-    keccak256 "^1.0.6"
-
 "@ayanworks/credo-polygon-w3c-module@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@ayanworks/credo-polygon-w3c-module/-/credo-polygon-w3c-module-1.0.0.tgz#e48dcb48f8708b2959ebe02fcf3a5e08b168d479"
@@ -433,6 +419,20 @@
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
+
+"@bhutan-ndi/ethr-credo-module@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@bhutan-ndi/ethr-credo-module/-/ethr-credo-module-1.0.2.tgz#b694c0bbe83867579eef92f34fd6c9e05b884683"
+  integrity sha512-ymYyhTOGYfnmi3Ke80DD9+x1rJS1U5RsBopMXxoaQpumwC77pMx0Ocv9e/AZ5y4QVLVrJzXjBhZlZBmFAhJtUw==
+  dependencies:
+    "@credo-ts/askar" "0.5.3"
+    "@credo-ts/core" "0.5.3"
+    axios "^1.6.3"
+    did-resolver "^4.1.0"
+    ethers "^6.9.0"
+    ethr-did "^3.0.38"
+    ethr-did-resolver "^11.0.4"
+    keccak256 "^1.0.6"
 
 "@credo-ts/anoncreds@0.5.3":
   version "0.5.3"

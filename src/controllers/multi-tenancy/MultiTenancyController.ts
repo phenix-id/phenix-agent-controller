@@ -7,8 +7,8 @@ import type {
   SchemaMetadata,
   SignDataOptions,
 } from '../types'
-import type { EthereumDidCreateOptions } from '@ayanworks/credo-ethr-module/build/dids'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { EthereumDidCreateOptions } from '@bhutan-ndi/ethr-credo-module/build/dids'
 import type {
   AcceptProofRequestOptions,
   ConnectionRecordProps,
@@ -592,7 +592,7 @@ export class MultiTenancyController extends Controller {
       if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim() || privatekey.length !== 64) {
         throw Error('Invalid private key or not supported')
       }
-      this.agent.config.logger.info("creating did-ether")
+      this.agent.config.logger.info('creating did-ether')
 
       createDidResponse = await tenantAgent.dids.create<EthereumDidCreateOptions>({
         method: DidMethod.Ethereum,
@@ -1114,15 +1114,6 @@ export class MultiTenancyController extends Controller {
           schema,
         })
       })
-
-      if (schemaResponse.schemaState?.state === 'failed') {
-        const reason = schemaResponse.schemaState?.reason?.toLowerCase()
-        if (reason && reason.includes('insufficient') && reason.includes('funds')) {
-          throw new Error('Insufficient funds to the address, Please add funds to perform this operation')
-        } else {
-          throw new Error(schemaResponse.schemaState?.reason)
-        }
-      }
 
       const configFileData = fs.readFileSync('config.json', 'utf-8')
       const config = JSON.parse(configFileData)
