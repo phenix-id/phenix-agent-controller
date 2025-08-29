@@ -50,6 +50,9 @@ WORKDIR /app
 
 # Copy package.json and yarn.lock files
 COPY package.json yarn.lock ./
+#RUN yarn
+# Install dependencies
+RUN yarn install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
@@ -63,7 +66,7 @@ RUN yarn global add patch-package
 RUN yarn build
 
 # Stage 2: Production stage
-FROM node:18.19.0-slim
+FROM node:18.19.0-slim AS runtime
 
 WORKDIR /app
 

@@ -1,0 +1,94 @@
+{
+    "family": "QA_Platform-admin_TASKDEFIITION",
+    "runtimePlatform": {
+        "operatingSystemFamily": "LINUX",
+        "cpuArchitecture": "ARM64"
+    },
+    "containerDefinitions": [
+        {
+            "name": "Platform-admin",
+            "image": "%REPOSITORY_URI%:CREDO_V_%BUILD_NUMBER%",
+            "cpu": 1024,
+            "memory": 2048,
+            "portMappings": [
+                {
+                    "name": "platform-admin-8027-tcp",
+                    "containerPort": 8027,
+                    "hostPort": 8027,
+                    "protocol": "tcp"
+                },
+                {
+                    "name": "platform-admin-9027-tcp",
+                    "containerPort": 9027,
+                    "hostPort": 9027,
+                    "protocol": "tcp"
+                }
+
+            ],
+            "essential": true,
+            "command": [
+                "--auto-accept-connections",
+                "--config",
+                "/config/685df587-7cf5-46cf-873c-502719ac5c35_Platform-admin.json"
+            ],
+            "environment": [
+                {
+                    "name": "AFJ_REST_LOG_LEVEL",
+                    "value": "1"
+                }       
+            ],
+            "environmentFiles": [
+                {
+                    "value": "arn:aws:s3:::env-qabucket/qa-credo.env",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "AGENT-CONFIG",
+                    "containerPath": "/config",
+                    "readOnly": true
+                }
+            ],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/QA_Platform-admin_TASKDEFIITION",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        }
+        
+    ],
+    "executionRoleArn": "arn:aws:iam::058264212188:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "volumes": [
+        {
+            "name": "AGENT-CONFIG",
+            "efsVolumeConfiguration": {
+            "fileSystemId": "fs-027dfce09a9626534",
+            "rootDirectory": "/",
+            "transitEncryption": "ENABLED",
+            "authorizationConfig": {
+            "accessPointId": "fsap-0d962feb103255a71",
+            "iam": "DISABLED"
+        }
+      }
+    }
+],
+   
+    "executionRoleArn": "arn:aws:iam::id:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}

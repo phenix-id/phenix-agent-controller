@@ -1,5 +1,6 @@
 import type { DidResolutionResultProps } from '../types'
 import type { PolygonDidCreateOptions } from '@ayanworks/credo-polygon-w3c-module/build/dids'
+import type { EthereumDidCreateOptions } from '@bhutan-ndi/ethr-credo-module/build/dids'
 import type { KeyDidCreateOptions } from '@credo-ts/core'
 
 import {
@@ -90,6 +91,10 @@ export class DidController extends Controller {
 
         case DidMethod.Polygon:
           result = await this.handlePolygon(createDidOptions)
+          break
+
+        case DidMethod.Ethereum:
+          result = await this.handleEthereum(createDidOptions)
           break
 
         default:
@@ -419,7 +424,7 @@ export class DidController extends Controller {
       throw new BadRequestError('Invalid private key or not supported')
     }
 
-    return this.agent.dids.create<PolygonDidCreateOptions>({
+    const createDidResponse = await this.agent.dids.create<PolygonDidCreateOptions>({
       method: 'polygon',
       options: {
         network: networkName,
@@ -429,6 +434,38 @@ export class DidController extends Controller {
         privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
       },
     })
+    const didResponse = {
+      did: createDidResponse?.didState?.did,
+      didDoc: createDidResponse?.didState?.didDocument,
+    }
+    return didResponse
+  }
+
+  public async handleEthereum(createDidOptions: DidCreate) {
+    const { endpoint, network, privatekey } = createDidOptions
+    const networkName = network?.split(':')[1]
+    if (networkName !== 'mainnet' && networkName !== 'sepolia') {
+      throw Error('Invalid network type')
+    }
+    if (!privatekey || typeof privatekey !== 'string' || !privatekey.trim()) {
+      throw Error('Invalid private key or not supported')
+    }
+
+    const createDidResponse = await this.agent.dids.create<EthereumDidCreateOptions>({
+      method: 'ethr',
+      options: {
+        network: networkName,
+        endpoint,
+      },
+      secret: {
+        privateKey: TypedArrayEncoder.fromHex(`${privatekey}`),
+      },
+    })
+    const didResponse = {
+      did: createDidResponse?.didState?.did,
+      didDoc: createDidResponse?.didState?.didDocument,
+    }
+    return didResponse
   }
 
   @Get('/')

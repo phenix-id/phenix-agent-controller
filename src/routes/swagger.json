@@ -941,6 +941,9 @@
 					},
 					"isDefault": {
 						"type": "boolean"
+					},
+					"address": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -6679,6 +6682,172 @@
 				}
 			}
 		},
+		"/multi-tenancy/sign/{tenantId}": {
+			"post": {
+				"operationId": "Sign",
+				"responses": {
+					"200": {
+						"description": "Signature in base64 format",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Sign data using a key",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Tenant identifier",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Sign options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignDataOptions",
+								"description": "Sign options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/verify/{tenantId}": {
+			"post": {
+				"operationId": "Verify",
+				"responses": {
+					"200": {
+						"description": "isValidSignature - true if signature is valid, false otherwise",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Verify data using a key",
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"description": "Tenant identifier",
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Verify options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format\nsignature - Signature in base64 format",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/VerifyDataOptions",
+								"description": "Verify options\ndata - Data has to be in base64 format\npublicKeyBase58 - Public key in base58 format\nsignature - Signature in base64 format"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/transactions/endorse": {
 			"post": {
 				"operationId": "EndorserTransaction",
@@ -8402,6 +8571,234 @@
 					}
 				],
 				"parameters": []
+			}
+		},
+		"/ethereum/create-keys": {
+			"post": {
+				"operationId": "CreateKeyPair",
+				"responses": {
+					"200": {
+						"description": "Secp256k1KeyPair",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"address": {
+											"type": "string"
+										},
+										"publicKeyBase58": {
+											"type": "string"
+										},
+										"privateKey": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"address",
+										"publicKeyBase58",
+										"privateKey"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create Ethereum key pair for ethereum DID",
+				"tags": [
+					"Ethereum"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/ethereum/create-schema": {
+			"post": {
+				"operationId": "CreateSchema",
+				"responses": {
+					"200": {
+						"description": "Schema JSON",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create ethereum based W3C schema",
+				"tags": [
+					"Ethereum"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"schema": {
+										"properties": {},
+										"additionalProperties": {},
+										"type": "object"
+									},
+									"schemaName": {
+										"type": "string"
+									},
+									"did": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"schema",
+									"schemaName",
+									"did"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/ethereum/{did}/{schemaId}": {
+			"get": {
+				"operationId": "GetSchemaById",
+				"responses": {
+					"200": {
+						"description": "Transaction Object",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"401": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Estimate transaction",
+				"tags": [
+					"Ethereum"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "did",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "schemaId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/question-answer": {

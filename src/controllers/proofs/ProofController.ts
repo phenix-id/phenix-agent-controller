@@ -6,7 +6,7 @@ import type {
   Routing,
 } from '@credo-ts/core'
 
-import { Agent, PeerDidNumAlgo, createPeerDidDocumentFromServices } from '@credo-ts/core'
+import { Agent, createPeerDidDocumentFromServices, Key, KeyType, PeerDidNumAlgo } from '@credo-ts/core'
 import { injectable } from 'tsyringe'
 
 import ErrorHandlingService from '../../errorHandlingService'
@@ -150,15 +150,23 @@ export class ProofController extends Controller {
     try {
       let routing: Routing
       let invitationDid: string | undefined
-
       if (createRequestOptions?.invitationDid) {
         invitationDid = createRequestOptions?.invitationDid
       } else {
-        routing = await this.agent.mediationRecipient.getRouting({})
+        if (createRequestOptions?.recipientKey) {
+          routing = {
+            endpoints: this.agent.config.endpoints,
+            routingKeys: [],
+            recipientKey: Key.fromPublicKeyBase58(createRequestOptions.recipientKey, KeyType.Ed25519),
+            mediatorId: undefined,
+          }
+        } else {
+          routing = await this.agent.mediationRecipient.getRouting({})
+        }
         const didDocument = createPeerDidDocumentFromServices([
           {
             id: 'didcomm',
-            recipientKeys: [routing.recipientKey],
+            recipientKeys: routing.routingKeys,
             routingKeys: routing.routingKeys,
             serviceEndpoint: routing.endpoints[0],
           },
@@ -189,6 +197,7 @@ export class ProofController extends Controller {
         autoAcceptConnection: true,
         imageUrl: createRequestOptions?.imageUrl,
         invitationDid,
+        goalCode: createRequestOptions?.goalCode,
       })
 
       return {
@@ -199,6 +208,12 @@ export class ProofController extends Controller {
           useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
+        proofRecordThId: proof.proofRecord.threadId,
+        proofMessageId: proof.message.thread?.threadId
+          ? proof.message.thread?.threadId
+          : proof.message.threadId
+          ? proof.message.thread
+          : proof.message.id,
         invitationDid: createRequestOptions?.invitationDid ? '' : invitationDid,
       }
     } catch (error) {

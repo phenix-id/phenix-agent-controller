@@ -1,0 +1,75 @@
+diff --git a/node_modules/@credo-ts/core/build/modules/oob/OutOfBandService.js b/node_modules/@credo-ts/core/build/modules/oob/OutOfBandService.js
+index fa74cc4..db6ac4b 100644
+--- a/node_modules/@credo-ts/core/build/modules/oob/OutOfBandService.js
++++ b/node_modules/@credo-ts/core/build/modules/oob/OutOfBandService.js
+@@ -66,10 +66,12 @@ let OutOfBandService = class OutOfBandService {
+     async processHandshakeReuse(messageContext) {
+         var _a, _b, _c;
+         const reuseMessage = messageContext.message;
++        console.log('Executing processHandshakeReuse ::::::::');
+         const parentThreadId = (_a = reuseMessage.thread) === null || _a === void 0 ? void 0 : _a.parentThreadId;
+         if (!parentThreadId) {
+             throw new error_1.CredoError('handshake-reuse message must have a parent thread id');
+         }
++        console.log(`received parentThreadId :::::::: `, parentThreadId);
+         const outOfBandRecord = await this.findByCreatedInvitationId(messageContext.agentContext, parentThreadId);
+         if (!outOfBandRecord) {
+             throw new error_1.CredoError('No out of band record found for handshake-reuse message');
+@@ -82,6 +84,7 @@ let OutOfBandService = class OutOfBandService {
+             throw new error_1.CredoError('Handshake reuse should only be used when no requests are present');
+         }
+         const reusedConnection = messageContext.assertReadyConnection();
++        console.log('Emitting HandshakeReused event ::::::::');
+         this.eventEmitter.emit(messageContext.agentContext, {
+             type: OutOfBandEvents_1.OutOfBandEventTypes.HandshakeReused,
+             payload: {
+@@ -103,7 +106,9 @@ let OutOfBandService = class OutOfBandService {
+     async processHandshakeReuseAccepted(messageContext) {
+         var _a;
+         const reuseAcceptedMessage = messageContext.message;
++        console.log('Executing processHandshakeReuseAccepted ::::::::');
+         const parentThreadId = (_a = reuseAcceptedMessage.thread) === null || _a === void 0 ? void 0 : _a.parentThreadId;
++        console.log(parentThreadId);
+         if (!parentThreadId) {
+             throw new error_1.CredoError('handshake-reuse-accepted message must have a parent thread id');
+         }
+@@ -124,6 +129,7 @@ let OutOfBandService = class OutOfBandService {
+         if (outOfBandRecord.reuseConnectionId !== reusedConnection.id) {
+             throw new error_1.CredoError('handshake-reuse-accepted is not in response to a handshake-reuse message.');
+         }
++        console.log('Emitting HandshakeReused event ::::::::');
+         this.eventEmitter.emit(messageContext.agentContext, {
+             type: OutOfBandEvents_1.OutOfBandEventTypes.HandshakeReused,
+             payload: {
+@@ -136,6 +142,7 @@ let OutOfBandService = class OutOfBandService {
+         await this.updateState(messageContext.agentContext, outOfBandRecord, OutOfBandState_1.OutOfBandState.Done);
+     }
+     async createHandShakeReuse(agentContext, outOfBandRecord, connectionRecord) {
++        console.log('Creating HandshakeReuseMessage ::::::::');
+         const reuseMessage = new messages_1.HandshakeReuseMessage({ parentThreadId: outOfBandRecord.outOfBandInvitation.id });
+         // Store the reuse connection id
+         outOfBandRecord.reuseConnectionId = connectionRecord.id;
+diff --git a/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseAcceptedHandler.js b/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseAcceptedHandler.js
+index 847a02d..837c634 100644
+--- a/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseAcceptedHandler.js
++++ b/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseAcceptedHandler.js
+@@ -8,6 +8,7 @@ class HandshakeReuseAcceptedHandler {
+         this.outOfBandService = outOfBandService;
+     }
+     async handle(messageContext) {
++        console.log('Executing function to processHandshakeReuseAccepted ::::::::');
+         messageContext.assertReadyConnection();
+         await this.outOfBandService.processHandshakeReuseAccepted(messageContext);
+     }
+diff --git a/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseHandler.js b/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseHandler.js
+index 44d9752..ed516b0 100644
+--- a/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseHandler.js
++++ b/node_modules/@credo-ts/core/build/modules/oob/handlers/HandshakeReuseHandler.js
+@@ -10,6 +10,7 @@ class HandshakeReuseHandler {
+     }
+     async handle(messageContext) {
+         const connectionRecord = messageContext.assertReadyConnection();
++        console.log('Executing function to processHandshakeReuse ::::::::');
+         const handshakeReuseAcceptedMessage = await this.outOfBandService.processHandshakeReuse(messageContext);
+         return new models_1.OutboundMessageContext(handshakeReuseAcceptedMessage, {
+             agentContext: messageContext.agentContext,

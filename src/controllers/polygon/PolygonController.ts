@@ -68,6 +68,7 @@ export class Polygon extends Controller {
         schemaName,
         schema,
       })
+
       if (schemaResponse.schemaState?.state === 'failed') {
         const reason = schemaResponse.schemaState?.reason?.toLowerCase()
         if (reason && reason.includes('insufficient') && reason.includes('funds')) {
