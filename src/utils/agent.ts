@@ -38,7 +38,7 @@ import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import { TsLogger } from './logger'
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
-  const logger = new TsLogger(LogLevel.debug)
+  const logger = new TsLogger(LogLevel.error)
 
   const config: InitConfig = {
     label: name,

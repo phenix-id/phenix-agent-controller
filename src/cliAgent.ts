@@ -2,7 +2,10 @@ import type { InitConfig } from '@credo-ts/core'
 import type { WalletConfig } from '@credo-ts/core/build/types'
 import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { EthereumDidRegistrar, EthereumDidResolver, EthereumModule } from '@bhutan-ndi/ethr-credo-module'
 import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
@@ -144,8 +147,19 @@ const getModules = (
     }),
 
     dids: new DidsModule({
-      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar(), new PolygonDidRegistrar()],
-      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver(), new PolygonDidResolver()],
+      registrars: [
+        new IndyVdrIndyDidRegistrar(),
+        new KeyDidRegistrar(),
+        new PolygonDidRegistrar(),
+        new EthereumDidRegistrar(),
+      ],
+      resolvers: [
+        new IndyVdrIndyDidResolver(),
+        new KeyDidResolver(),
+        new WebDidResolver(),
+        new PolygonDidResolver(),
+        new EthereumDidResolver(),
+      ],
     }),
 
     anoncreds: new AnonCredsModule({
@@ -197,6 +211,22 @@ const getModules = (
       fileServerToken: fileServerToken ? fileServerToken : (process.env.FILE_SERVER_TOKEN as string),
       rpcUrl: rpcUrl ? rpcUrl : (process.env.RPC_URL as string),
       serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
+    }),
+    ethereum: new EthereumModule({
+      config: {
+        networks: [
+          {
+            name: 'sepolia',
+            chainId: 11155111,
+            rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/API-KEY',
+            registry: '0x485cFb9cdB84c0a5AfE69b75E2e79497Fc2256Fc',
+          },
+        ],
+      },
+      schemaManagerContractAddress: '0xa95ACF3119791F65b2192267836df9A472785c15',
+      serverUrl: 'https://dev-schema.ngotag.com',
+      fileServerToken: 'ACCESS-TOKEN',
+      rpcUrl: 'https://eth-sepolia.g.alchemy.com/v2/API-KEY',
     }),
   }
 }

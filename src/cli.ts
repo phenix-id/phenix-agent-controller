@@ -42,6 +42,9 @@ interface Parsed {
   rpcUrl?: string
   fileServerUrl?: string
   fileServerToken?: string
+  chainId?: string
+  chainName?: string
+  registry?: string
 }
 
 interface InboundTransport {
@@ -94,6 +97,18 @@ async function parseArguments(): Promise<Parsed> {
     .option('wallet-admin-password', {
       string: true,
       demandOption: true,
+    })
+     .option('chainId', {
+      string: true,
+      demandOption: false,
+    })
+    .option('chainName', {
+      string: true,
+      demandOption: false,
+    })
+    .option('registry', {
+      string: true,
+      demandOption: false,
     })
     .option('indy-ledger', {
       array: true,
@@ -245,12 +260,15 @@ export async function runCliServer() {
     outboundTransports: parsed['outbound-transport'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
-    tenancy: parsed.tenancy,
-    schemaFileServerURL: parsed.schemaFileServerURL,
-    didRegistryContractAddress: parsed.didRegistryContractAddress,
-    schemaManagerContractAddress: parsed.schemaManagerContractAddress,
-    rpcUrl: parsed.rpcUrl,
-    fileServerUrl: parsed.fileServerUrl,
-    fileServerToken: parsed.fileServerToken,
-  } as AriesRestConfig)
+    tenancy: parsed['tenancy'],
+    schemaFileServerURL: parsed['schemaFileServerURL'],
+    didRegistryContractAddress: parsed['didRegistryContractAddress'],
+    schemaManagerContractAddress: parsed['schemaManagerContractAddress'],
+    rpcUrl: parsed['rpcUrl'],
+    fileServerUrl: parsed['fileServerUrl'],
+    fileServerToken: parsed['fileServerToken'],
+    chainId: parsed['chainId'],
+    name: parsed['chainName'],
+    registry: parsed['registry'],
+  } as unknown as AriesRestConfig)
 }
