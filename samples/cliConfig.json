@@ -8,7 +8,7 @@
   "walletPassword": "postgres",
   "walletAdminAccount": "postgres",
   "walletAdminPassword": "postgres",
-  "walletScheme": "DatabasePerWallet",
+  "walletScheme": "ProfilePerWallet",
   "indyLedger": [
     {
       "genesisTransactions": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
@@ -19,16 +19,15 @@
       "indyNamespace": "indicio:demonet"
     },
     {
-      "genesisTransactions": "http://test.bcovrin.vonx.io/genesis",
+      "genesisTransactions": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
       "indyNamespace": "bcovrin:testnet"
     }
   ],
   "endpoint": ["http://localhost:4002"],
   "autoAcceptConnections": true,
-  "autoAcceptCredentials": "contentApproved",
+  "autoAcceptCredentials": "always",
   "autoAcceptProofs": "contentApproved",
-  "useLegacyDidSovPrefix": true,
-  "logLevel": 5,
+  "logLevel": 2,
   "inboundTransport": [
     {
       "transport": "http",
@@ -36,7 +35,6 @@
     }
   ],
   "outboundTransport": ["http"],
-  "autoAcceptMediationRequests": false,
   "adminPort": 4001,
   "tenancy": true,
   "schemaFileServerURL": "https://dev-schema.ngotag.com/schemas/",
