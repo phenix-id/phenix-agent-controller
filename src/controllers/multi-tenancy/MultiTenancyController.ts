@@ -99,6 +99,7 @@ import {
   CreateSchemaInput,
   selfAttestedJsonLdCredentialOptions,
   VerifyDataOptions,
+  AddConnectionType,
 } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
@@ -720,6 +721,29 @@ export class MultiTenancyController extends Controller {
       let connectionRecord
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
         const connection = await tenantAgent.connections.findById(connectionId)
+
+        if (!connection) throw new NotFoundError(`connection with connection id "${connectionId}" not found.`)
+        connectionRecord = connection.toJSON()
+      })
+
+      return connectionRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Security('apiKey')
+  @Post('/add-connection-type/:connectionId/:tenantId')
+  public async addConnectionType(
+    @Path('tenantId') tenantId: string,
+    @Path('connectionId') connectionId: RecordId,
+    @Body() body: AddConnectionType
+  ) {
+    try {
+      let connectionRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const connection = await tenantAgent.connections.addConnectionType(connectionId, body.connectionType)
 
         if (!connection) throw new NotFoundError(`connection with connection id "${connectionId}" not found.`)
         connectionRecord = connection.toJSON()
