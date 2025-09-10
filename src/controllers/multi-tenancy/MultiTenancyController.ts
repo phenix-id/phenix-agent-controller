@@ -99,6 +99,7 @@ import {
   CreateSchemaInput,
   selfAttestedJsonLdCredentialOptions,
   VerifyDataOptions,
+  AddConnectionType,
 } from '../types'
 
 import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
@@ -733,6 +734,29 @@ export class MultiTenancyController extends Controller {
 
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Security('apiKey')
+  @Post('/add-connection-type/:connectionId/:tenantId')
+  public async addConnectionType(
+    @Path('tenantId') tenantId: string,
+    @Path('connectionId') connectionId: RecordId,
+    @Body() body: AddConnectionType
+  ) {
+    try {
+      let connectionRecord
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const connection = await tenantAgent.connections.addConnectionType(connectionId, body.connectionType)
+
+        if (!connection) throw new NotFoundError(`connection with connection id "${connectionId}" not found.`)
+        connectionRecord = connection.toJSON()
+      })
+
+      return connectionRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Security('apiKey')
   @Delete('/connections/:connectionId/:tenantId')
   public async deleteConnectionById(@Path('tenantId') tenantId: string, @Path('connectionId') connectionId: RecordId) {
     try {
@@ -875,14 +899,19 @@ export class MultiTenancyController extends Controller {
     let receiveInvitationUrl
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        const { invitationUrl, ...config } = invitationRequest
+        const { invitationUrl, connectionType, ...config } = invitationRequest
         const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
           invitationUrl,
           config
         )
+        let connectionRecordTemp = connectionRecord
+        if (connectionRecordTemp && connectionType) {
+          const connection = await tenantAgent.connections.addConnectionType(connectionRecordTemp.id, connectionType)
+          connectionRecordTemp = connection
+        }
         receiveInvitationUrl = {
           outOfBandRecord: outOfBandRecord.toJSON(),
-          connectionRecord: connectionRecord?.toJSON(),
+          connectionRecord: connectionRecordTemp?.toJSON(),
         }
       })
       return receiveInvitationUrl

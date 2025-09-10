@@ -1,4 +1,5 @@
 {
+  "webhookUrl": "http://192.168.1.7:5000/wh/16b74064-4f15-47b5-8047-73d1ec7ad0dc",
   "port": 4001,
-  "schemaFileServerURL": "https://dev-schema.ngotag.com/"
+  "schemaFileServerURL": "https://dev-schema.ngotag.com/schemas/"
 }

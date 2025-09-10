@@ -201,6 +201,7 @@ export interface ReceiveInvitationProps extends ReceiveOutOfBandInvitationProps 
 
 export interface ReceiveInvitationByUrlProps extends ReceiveOutOfBandInvitationProps {
   invitationUrl: string
+  connectionType?: string
 }
 
 export interface AcceptInvitationConfig {
@@ -210,6 +211,10 @@ export interface AcceptInvitationConfig {
   alias?: string
   imageUrl?: string
   mediatorId?: string
+}
+
+export interface AddConnectionType {
+  connectionType: string
 }
 
 export interface OutOfBandInvitationSchema {

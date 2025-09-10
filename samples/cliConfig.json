@@ -38,6 +38,7 @@
   "adminPort": 4001,
   "tenancy": true,
   "schemaFileServerURL": "https://dev-schema.ngotag.com/schemas/",
+  "webhookUrl": "http://10.103.87.195:5000/wh/16b74064-4f15-47b5-8047-73d1ec7ad0dc",
   "didRegistryContractAddress": "0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E",
   "schemaManagerContractAddress": "0x4742d43C2dFCa5a1d4238240Afa8547Daf87Ee7a",
   "rpcUrl": "https://rpc-amoy.polygon.technology",
