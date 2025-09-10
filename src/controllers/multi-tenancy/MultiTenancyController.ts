@@ -899,14 +899,19 @@ export class MultiTenancyController extends Controller {
     let receiveInvitationUrl
     try {
       await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
-        const { invitationUrl, ...config } = invitationRequest
+        const { invitationUrl, connectionType, ...config } = invitationRequest
         const { outOfBandRecord, connectionRecord } = await tenantAgent.oob.receiveInvitationFromUrl(
           invitationUrl,
           config
         )
+        let connectionRecordTemp = connectionRecord
+        if (connectionRecordTemp && connectionType) {
+          const connection = await tenantAgent.connections.addConnectionType(connectionRecordTemp.id, connectionType)
+          connectionRecordTemp = connection
+        }
         receiveInvitationUrl = {
           outOfBandRecord: outOfBandRecord.toJSON(),
-          connectionRecord: connectionRecord?.toJSON(),
+          connectionRecord: connectionRecordTemp?.toJSON(),
         }
       })
       return receiveInvitationUrl

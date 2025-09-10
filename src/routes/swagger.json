@@ -858,6 +858,9 @@
 					},
 					"invitationUrl": {
 						"type": "string"
+					},
+					"connectionType": {
+						"type": "string"
 					}
 				},
 				"required": [
