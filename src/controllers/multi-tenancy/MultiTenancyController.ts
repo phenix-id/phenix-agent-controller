@@ -2086,6 +2086,7 @@ export class MultiTenancyController extends Controller {
     try {
       const NATS_URL = `${process.env.NATS_URL}`
       const nc = await connect({ servers: NATS_URL })
+      console.log(`nats connected on ${NATS_URL}`)
       const sc = StringCodec()
       const walletConfig = this.agent.wallet.walletConfig
       const msg = await nc.request(
@@ -2095,6 +2096,7 @@ export class MultiTenancyController extends Controller {
           timeout: 6000,
         }
       )
+      console.log(`msg received: ${sc.decode(msg.data)}`)
       return { path: sc.decode(msg.data) }
     } catch (error) {
       throw ErrorHandlingService.handle(error)
