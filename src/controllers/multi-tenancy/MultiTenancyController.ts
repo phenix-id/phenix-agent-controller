@@ -2084,6 +2084,7 @@ export class MultiTenancyController extends Controller {
     @Body() body: { passKey: string; walletID: string }
   ) {
     try {
+      console.log(`Before nats connected`)
       const NATS_URL = `${process.env.NATS_URL}`
       const nc = await connect({ servers: NATS_URL })
       console.log(`nats connected on ${NATS_URL}`)
