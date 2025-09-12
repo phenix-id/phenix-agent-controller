@@ -8,7 +8,7 @@
   "walletPassword": "postgres",
   "walletAdminAccount": "postgres",
   "walletAdminPassword": "postgres",
-  "walletScheme": "DatabasePerWallet",
+  "walletScheme": "ProfilePerWallet",
   "indyLedger": [
     {
       "genesisTransactions": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
@@ -19,16 +19,15 @@
       "indyNamespace": "indicio:demonet"
     },
     {
-      "genesisTransactions": "http://test.bcovrin.vonx.io/genesis",
+      "genesisTransactions": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
       "indyNamespace": "bcovrin:testnet"
     }
   ],
   "endpoint": ["http://localhost:4002"],
   "autoAcceptConnections": true,
-  "autoAcceptCredentials": "contentApproved",
+  "autoAcceptCredentials": "always",
   "autoAcceptProofs": "contentApproved",
-  "useLegacyDidSovPrefix": true,
-  "logLevel": 5,
+  "logLevel": 2,
   "inboundTransport": [
     {
       "transport": "http",
@@ -36,10 +35,10 @@
     }
   ],
   "outboundTransport": ["http"],
-  "autoAcceptMediationRequests": false,
   "adminPort": 4001,
   "tenancy": true,
   "schemaFileServerURL": "https://dev-schema.ngotag.com/schemas/",
+  "webhookUrl": "http://10.103.87.195:5000/wh/16b74064-4f15-47b5-8047-73d1ec7ad0dc",
   "didRegistryContractAddress": "0xcB80F37eDD2bE3570c6C9D5B0888614E04E1e49E",
   "schemaManagerContractAddress": "0x4742d43C2dFCa5a1d4238240Afa8547Daf87Ee7a",
   "rpcUrl": "https://rpc-amoy.polygon.technology",

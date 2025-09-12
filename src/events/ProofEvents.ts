@@ -26,6 +26,12 @@ export const proofEvents = async (agent: Agent<RestMultiTenantAgentModules>, con
       body.proofData = data
     }
 
+    //Emit webhook for dedicated agent
+    if (event.metadata.contextCorrelationId === 'default') {
+      const data = await agent.proofs.getFormatData(record.id)
+      body.proofData = data
+    }
+
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       await sendWebhookEvent(config.webhookUrl + '/proofs', body, agent.config.logger)
