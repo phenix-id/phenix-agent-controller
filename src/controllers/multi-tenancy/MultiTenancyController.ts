@@ -905,7 +905,7 @@ export class MultiTenancyController extends Controller {
           config
         )
         let connectionRecordTemp = connectionRecord
-        if (connectionRecordTemp && connectionType) {
+        if (connectionRecordTemp && connectionType && !connectionRecordTemp?.connectionTypes.includes(connectionType)) {
           const connection = await tenantAgent.connections.addConnectionType(connectionRecordTemp.id, connectionType)
           connectionRecordTemp = connection
         }
