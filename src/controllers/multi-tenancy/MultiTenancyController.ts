@@ -100,9 +100,10 @@ import {
   selfAttestedJsonLdCredentialOptions,
   VerifyDataOptions,
   AddConnectionType,
-} from '../types'
 
-import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response } from 'tsoa'
+  IRecordOfString} from '../types'
+
+import { Body, Controller, Delete, Get, Post, Query, Route, Tags, Path, Example, Security, Response, Patch } from 'tsoa'
 // import { AcceptProofRequestOptions } from '@credo-ts/core/build/modules/proofs/protocol/ProofProtocolOptions'
 
 @Tags('MultiTenancy')
@@ -644,6 +645,35 @@ export class MultiTenancyController extends Controller {
         }
       })
       return didRecord
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
+  @Patch('/dids/:tenantId')
+  public async updateDids(@Path('tenantId') tenantId: string, @Body() dids: IRecordOfString) {
+    try {
+      let result
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        const connectionRepository = tenantAgent.dependencyManager.resolve(ConnectionRepository)
+
+        const updates = Object.entries(dids).map(async ([connectionId, newDid]) => {
+          try {
+            const record = await tenantAgent.connections.findById(connectionId)
+            if (!record) return { connectionId, success: false, reason: 'Not found' }
+
+            record.did = newDid
+            await connectionRepository.update(tenantAgent.context, record)
+            return { connectionId, success: true }
+          } catch (error) {
+            return { connectionId, success: false, reason: (error as Error).message }
+          }
+        })
+
+        result = await Promise.all(updates)
+      })
+      return result
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }

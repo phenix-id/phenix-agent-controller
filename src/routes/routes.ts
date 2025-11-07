@@ -449,6 +449,13 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IRecordOfString": {
+        "dataType": "refObject",
+        "properties": {
+        },
+        "additionalProperties": {"dataType":"any"},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidNymTransaction": {
         "dataType": "refObject",
         "properties": {
@@ -2297,6 +2304,43 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getDids',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.patch('/multi-tenancy/dids/:tenantId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.updateDids)),
+
+            async function MultiTenancyController_updateDids(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    dids: {"in":"body","name":"dids","required":true,"ref":"IRecordOfString"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateDids',
                 controller,
                 response,
                 next,
