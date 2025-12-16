@@ -14,7 +14,7 @@ import {
   DidCommCredentialV1Protocol,
   DidCommProofV1Protocol,
 } from '@credo-ts/anoncreds'
-import { AskarModule, AskarModuleConfigStoreOptions, AskarMultiWalletDatabaseScheme } from '@credo-ts/askar'
+import { AskarModule, AskarMultiWalletDatabaseScheme } from '@credo-ts/askar'
 import {
   DidsModule,
   W3cCredentialsModule,
@@ -46,12 +46,20 @@ import {
   IndyVdrIndyDidRegistrar,
 } from '@credo-ts/indy-vdr'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
+import {
+  // OpenId4VcHolderModule,
+  // OpenId4VcIssuerModule,
+  OpenId4VcModule,
+  // OpenId4VcVerifierModule,
+} from '@credo-ts/openid4vc'
 import { QuestionAnswerModule } from '@credo-ts/question-answer'
 import { TenantsModule } from '@credo-ts/tenants'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
-import { askar } from '@openwallet-foundation/askar-nodejs'
 import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
+import { askar } from '@openwallet-foundation/askar-nodejs'
 import axios from 'axios'
+import bodyParser from 'body-parser'
+import express from 'express'
 import { readFile } from 'fs/promises'
 
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
@@ -60,14 +68,7 @@ import { isCustomDocumentLoaderEnabled } from './utils/config'
 import { CustomDocumentLoader } from './utils/customDocumentLoader'
 import { generateSecretKey } from './utils/helpers'
 import { TsLogger } from './utils/logger'
-import { OpenId4VcHolderModule, OpenId4VcIssuerModule, OpenId4VcVerifierModule } from '@credo-ts/openid4vc'
-import {
-  getCredentialRequestToCredentialMapper,
-  getTrustedCerts,
-} from './utils/oid4vc-agent'
-import bodyParser from 'body-parser'
-
-import express from 'express'
+import { getCredentialRequestToCredentialMapper, getTrustedCerts } from './utils/oid4vc-agent'
 
 const openId4VpApp = express()
 const openId4VcApp = express()
@@ -143,7 +144,7 @@ const getModules = (
   autoAcceptCredentials: DidCommAutoAcceptCredential,
   autoAcceptProofs: DidCommAutoAcceptProof,
   walletScheme: AskarMultiWalletDatabaseScheme,
-  storeOptions: AskarModuleConfigStoreOptions
+  storeOptions: AskarModuleConfigStoreOptions,
 ) => {
   const legacyIndyCredentialFormat = new LegacyIndyDidCommCredentialFormatService()
   const legacyIndyProofFormat = new LegacyIndyDidCommProofFormatService()
@@ -155,10 +156,9 @@ const getModules = (
     askar: new AskarModule({
       askar,
       store: {
-        ...storeOptions
+        ...storeOptions,
       },
       multiWalletDatabaseScheme: walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
-      
     }),
 
     indyVdr: new IndyVdrModule({
@@ -167,10 +167,15 @@ const getModules = (
     }),
 
     dids: new DidsModule({
-      registrars: [new IndyVdrIndyDidRegistrar(), new KeyDidRegistrar()
+      registrars: [
+        new IndyVdrIndyDidRegistrar(),
+        new KeyDidRegistrar(),
         // , new PolygonDidRegistrar()
       ],
-      resolvers: [new IndyVdrIndyDidResolver(), new KeyDidResolver(), new WebDidResolver()
+      resolvers: [
+        new IndyVdrIndyDidResolver(),
+        new KeyDidResolver(),
+        new WebDidResolver(),
         // , new PolygonDidResolver()
       ],
     }),
@@ -212,7 +217,11 @@ const getModules = (
             indyCredentialFormat: legacyIndyCredentialFormat,
           }),
           new DidCommCredentialV2Protocol({
-            credentialFormats: [legacyIndyCredentialFormat, jsonLdCredentialFormatService, anonCredsCredentialFormatService],
+            credentialFormats: [
+              legacyIndyCredentialFormat,
+              jsonLdCredentialFormatService,
+              anonCredsCredentialFormatService,
+            ],
           }),
         ],
       },
@@ -222,6 +231,7 @@ const getModules = (
     }),
 
     questionAnswer: new QuestionAnswerModule(),
+    openid4vc: new OpenId4VcModule({}),
     // polygon: new PolygonModule({
     //   didContractAddress: didRegistryContractAddress
     //     ? didRegistryContractAddress
@@ -232,28 +242,52 @@ const getModules = (
     //   rpcUrl: rpcUrl ? rpcUrl : (process.env.RPC_URL as string),
     //   serverUrl: fileServerUrl ? fileServerUrl : (process.env.SERVER_URL as string),
     // }),
-    openId4VcVerifier: new OpenId4VcVerifierModule({
-      baseUrl:
-        process.env.NODE_ENV === 'PROD'
-          ? `https://${process.env.APP_URL}/oid4vp`
-          : `${process.env.AGENT_HTTP_URL}/oid4vp`,
-      app: openId4VpApp,
-      authorizationRequestExpirationInSeconds: Number(process.env.OID4VP_AUTH_REQUEST_PROOF_REQUEST_EXPIRY) || 3600,
-    }),
-    openId4VcIssuer: new OpenId4VcIssuerModule({
-      baseUrl:
-        process.env.NODE_ENV === 'PROD'
-          ? `https://${process.env.APP_URL}/oid4vci`
-          : `${process.env.AGENT_HTTP_URL}/oid4vci`,
-      app: openId4VcApp,
-      statefulCredentialOfferExpirationInSeconds: Number(process.env.OID4VCI_CRED_OFFER_EXPIRY) || 3600,
-      accessTokenExpiresInSeconds: Number(process.env.OID4VCI_ACCESS_TOKEN_EXPIRY) || 3600,
-      authorizationCodeExpiresInSeconds: Number(process.env.OID4VCI_AUTH_CODE_EXPIRY) || 3600,
-      cNonceExpiresInSeconds: Number(process.env.OID4VCI_CNONCE_EXPIRY) || 3600,
-      dpopRequired: false,
-      credentialRequestToCredentialMapper: (...args) => getCredentialRequestToCredentialMapper()(...args),
-    }),
-    openId4VcHolderModule: new OpenId4VcHolderModule(),
+    // openid4vc: new OpenId4VcModule({
+    //   // app: openId4VcApp,
+    //   issuer: {
+    //     baseUrl:
+    //       process.env.NODE_ENV === 'PROD'
+    //         ? `https://${process.env.APP_URL}/oid4vci`
+    //         : `${process.env.AGENT_HTTP_URL}/oid4vci`,
+    //     app: openId4VcApp,
+    //     statefulCredentialOfferExpirationInSeconds: Number(process.env.OID4VCI_CRED_OFFER_EXPIRY) || 3600,
+    //     accessTokenExpiresInSeconds: Number(process.env.OID4VCI_ACCESS_TOKEN_EXPIRY) || 3600,
+    //     authorizationCodeExpiresInSeconds: Number(process.env.OID4VCI_AUTH_CODE_EXPIRY) || 3600,
+    //     cNonceExpiresInSeconds: Number(process.env.OID4VCI_CNONCE_EXPIRY) || 3600,
+    //     dpopRequired: false,
+    //     credentialRequestToCredentialMapper: (...args) => getCredentialRequestToCredentialMapper()(...args),
+    //   },
+    //   verifier: {
+    //     baseUrl:
+    //       process.env.NODE_ENV === 'PROD'
+    //         ? `https://${process.env.APP_URL}/oid4vp`
+    //         : `${process.env.AGENT_HTTP_URL}/oid4vp`,
+    //     app: openId4VpApp,
+    //     authorizationRequestExpirationInSeconds: Number(process.env.OID4VP_AUTH_REQUEST_PROOF_REQUEST_EXPIRY) || 3600,
+    //   },
+    // }),
+    // openId4VcVerifier: new OpenId4VcVerifierModule({
+    //   baseUrl:
+    //     process.env.NODE_ENV === 'PROD'
+    //       ? `https://${process.env.APP_URL}/oid4vp`
+    //       : `${process.env.AGENT_HTTP_URL}/oid4vp`,
+    //   app: openId4VpApp,
+    //   authorizationRequestExpirationInSeconds: Number(process.env.OID4VP_AUTH_REQUEST_PROOF_REQUEST_EXPIRY) || 3600,
+    // }),
+    // openId4VcIssuer: new OpenId4VcIssuerModule({
+    //   baseUrl:
+    //     process.env.NODE_ENV === 'PROD'
+    //       ? `https://${process.env.APP_URL}/oid4vci`
+    //       : `${process.env.AGENT_HTTP_URL}/oid4vci`,
+    //   app: openId4VcApp,
+    //   statefulCredentialOfferExpirationInSeconds: Number(process.env.OID4VCI_CRED_OFFER_EXPIRY) || 3600,
+    //   accessTokenExpiresInSeconds: Number(process.env.OID4VCI_ACCESS_TOKEN_EXPIRY) || 3600,
+    //   authorizationCodeExpiresInSeconds: Number(process.env.OID4VCI_AUTH_CODE_EXPIRY) || 3600,
+    //   cNonceExpiresInSeconds: Number(process.env.OID4VCI_CNONCE_EXPIRY) || 3600,
+    //   dpopRequired: false,
+    //   credentialRequestToCredentialMapper: (...args) => getCredentialRequestToCredentialMapper()(...args),
+    // }),
+    // openId4VcHolderModule: new OpenId4VcHolderModule(),
     x509: new X509Module({
       getTrustedCertificatesForVerification: async (_agentContext, { certificateChain, verification }) => {
         //TODO: We need to trust the certificate tenant wise, for that we need to fetch those details from platform
@@ -277,7 +311,7 @@ const getWithTenantModules = (
   autoAcceptCredentials: DidCommAutoAcceptCredential,
   autoAcceptProofs: DidCommAutoAcceptProof,
   walletScheme: AskarMultiWalletDatabaseScheme,
-  walletConfig: AskarModuleConfigStoreOptions
+  walletConfig: AskarModuleConfigStoreOptions,
 ) => {
   const modules = getModules(
     networkConfig,
@@ -290,7 +324,7 @@ const getWithTenantModules = (
     autoAcceptCredentials,
     autoAcceptProofs,
     walletScheme,
-    walletConfig
+    walletConfig,
   )
   return {
     tenants: new TenantsModule<typeof modules>({
@@ -420,7 +454,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials || DidCommAutoAcceptCredential.Always,
     autoAcceptProofs || DidCommAutoAcceptProof.ContentApproved,
     walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
-    walletConfig
+    walletConfig,
   )
   const modules = getModules(
     networkConfig,
@@ -433,7 +467,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials || DidCommAutoAcceptCredential.Always,
     autoAcceptProofs || DidCommAutoAcceptProof.ContentApproved,
     walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
-    walletConfig
+    walletConfig,
   )
   const agent = new Agent({
     config: agentConfig,
@@ -470,8 +504,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       )
       transport.app.use(bodyParser.json({ limit: process.env.APP_JSON_BODY_SIZE ?? '5mb' }))
 
-      transport.app.use('/oid4vci', modules.openId4VcIssuer.config.app)
-      transport.app.use('/oid4vp', modules.openId4VcVerifier.config.app)
+      transport.app.use('/oid4vci', modules.openid4vc.issuer?.config.app ?? express.Router())
+      transport.app.use('/oid4vp', modules.openid4vc.verifier?.config.app ?? express.Router())
     }
   }
 
