@@ -2102,6 +2102,45 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Post('/import-tenant/:tenantId')
+  public async importTenant(
+    @Path('tenantId') tenantId: string,
+    @Body() body: { exportedUrl: string; exportedWalletID: string; exportedWalletKey: string }
+  ) {
+    try {
+      const NATS_URL = `${process.env.NATS_URL}`
+      const nc = await connect({ servers: NATS_URL })
+      const sc = StringCodec()
+
+      const exportedWalletConfig = {
+        url: body.exportedUrl,
+        walletId: body.exportedWalletID,
+        walletKey: body.exportedWalletKey,
+      }
+
+      const walletConfig = this.agent.wallet.walletConfig
+      const importWalletConfig = {
+        tenantId,
+        setAsDefault: false,
+        ...walletConfig,
+      }
+
+      const payload = {
+        exportedWalletConfig,
+        importWalletConfig,
+      }
+
+      const msg = await nc.request('wallet.import_download_s3', sc.encode(JSON.stringify({ ...payload })), {
+        timeout: 6000,
+      })
+      return { id: sc.decode(msg.data) }
+
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Post('/did/web/:tenantId')
   public async createDidWeb(@Path('tenantId') tenantId: string, @Body() didOptions: DidCreate) {
     try {
