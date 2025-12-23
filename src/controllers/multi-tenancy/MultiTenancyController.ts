@@ -2105,7 +2105,7 @@ export class MultiTenancyController extends Controller {
   @Post('/import-tenant/:tenantId')
   public async importTenant(
     @Path('tenantId') tenantId: string,
-    @Body() body: { exportedUrl: string; exportedWalletID: string; exportedWalletKey: string }
+    @Body() body: { exportedUrl: string; checksum: string; exportedWalletID: string; exportedWalletKey: string }
   ) {
     try {
       const NATS_URL = `${process.env.NATS_URL}`
@@ -2114,6 +2114,7 @@ export class MultiTenancyController extends Controller {
 
       const exportedWalletConfig = {
         url: body.exportedUrl,
+        checksum: body.checksum,
         walletId: body.exportedWalletID,
         walletKey: body.exportedWalletKey,
       }
