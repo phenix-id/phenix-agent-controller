@@ -2105,7 +2105,14 @@ export class MultiTenancyController extends Controller {
   @Post('/import-tenant/:tenantId')
   public async importTenant(
     @Path('tenantId') tenantId: string,
-    @Body() body: { exportedUrl: string; checksum: string; exportedWalletID: string; exportedWalletKey: string }
+    @Body()
+    body: {
+      exportId: string
+      exportedUrl: string
+      checksum: string
+      exportedWalletID: string
+      exportedWalletKey: string
+    }
   ) {
     try {
       const NATS_URL = `${process.env.NATS_URL}`
@@ -2113,6 +2120,7 @@ export class MultiTenancyController extends Controller {
       const sc = StringCodec()
 
       const exportedWalletConfig = {
+        exportId: body.exportId,
         url: body.exportedUrl,
         checksum: body.checksum,
         walletId: body.exportedWalletID,
@@ -2135,7 +2143,6 @@ export class MultiTenancyController extends Controller {
         timeout: 6000,
       })
       return { id: sc.decode(msg.data) }
-
     } catch (error) {
       throw ErrorHandlingService.handle(error)
     }
