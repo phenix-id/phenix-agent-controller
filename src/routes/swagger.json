@@ -985,6 +985,13 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"IRecordOfString": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"type": "string"
+				}
+			},
 			"DidNymTransaction": {
 				"properties": {
 					"did": {
@@ -4972,6 +4979,88 @@
 						"schema": {
 							"default": false,
 							"type": "boolean"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateDids",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/IRecordOfString"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/multi-tenancy/dids/rotate/{tenantId}/{connectionId}": {
+			"post": {
+				"operationId": "RotateDids",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"type": "string"
 						}
 					}
 				]

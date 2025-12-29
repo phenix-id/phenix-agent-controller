@@ -367,6 +367,10 @@ export interface DidNymTransaction {
   nymRequest: string
 }
 
+export interface IRecordOfString {
+  [key: string]: string
+}
+
 //todo:Add endorsedTransaction type
 export interface WriteTransaction {
   endorsedTransaction: string

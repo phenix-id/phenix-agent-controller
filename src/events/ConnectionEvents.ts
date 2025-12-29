@@ -1,5 +1,5 @@
 import type { ServerConfig } from '../utils/ServerConfig'
-import type { Agent, ConnectionStateChangedEvent } from '@credo-ts/core'
+import type { Agent, ConnectionDidRotatedEvent, ConnectionStateChangedEvent } from '@credo-ts/core'
 
 import { ConnectionEventTypes } from '@credo-ts/core'
 
@@ -14,6 +14,26 @@ export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       await sendWebhookEvent(config.webhookUrl + '/connections', body, agent.config.logger)
+    }
+
+    if (config.socketServer) {
+      // Always emit websocket event to clients (could be 0)
+      sendWebSocketEvent(config.socketServer, {
+        ...event,
+        payload: {
+          ...event.payload,
+          connectionRecord: body,
+        },
+      })
+    }
+  })
+
+  agent.events.on(ConnectionEventTypes.ConnectionDidRotated, async (event: ConnectionDidRotatedEvent) => {
+    const record = event.payload.connectionRecord
+    const body = { ...record.toJSON(), ...event.metadata }
+    // Only send webhook if webhook url is configured
+    if (config.webhookUrl) {
+      await sendWebhookEvent(config.webhookUrl + '/connections/did-rotated', body, agent.config.logger)
     }
 
     if (config.socketServer) {
