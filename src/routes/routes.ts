@@ -453,7 +453,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
         },
-        "additionalProperties": {"dataType":"any"},
+        "additionalProperties": {"dataType":"string"},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DidNymTransaction": {
@@ -2341,6 +2341,43 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'updateDids',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/multi-tenancy/dids/rotate/:tenantId/:connectionId',
+            authenticateMiddleware([{"apiKey":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController)),
+            ...(fetchMiddlewares<RequestHandler>(MultiTenancyController.prototype.rotateDids)),
+
+            async function MultiTenancyController_rotateDids(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    tenantId: {"in":"path","name":"tenantId","required":true,"dataType":"string"},
+                    connectionId: {"in":"path","name":"connectionId","required":true,"dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<MultiTenancyController>(MultiTenancyController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'rotateDids',
                 controller,
                 response,
                 next,

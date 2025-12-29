@@ -680,6 +680,22 @@ export class MultiTenancyController extends Controller {
   }
 
   @Security('apiKey')
+  @Post('/dids/rotate/:tenantId/:connectionId')
+  public async rotateDids(@Path('tenantId') tenantId: string, @Path('connectionId') connectionId: string) {
+    try {
+      let result
+      await this.agent.modules.tenants.withTenantAgent({ tenantId }, async (tenantAgent) => {
+        result = await tenantAgent.connections.rotate({
+          connectionId: connectionId,
+        })
+      })
+      return result
+    } catch (error) {
+      throw ErrorHandlingService.handle(error)
+    }
+  }
+
+  @Security('apiKey')
   @Get('/checkCloudWalletExists/:tenantId')
   public async getCloudWallet(@Path('tenantId') tenantId: string) {
     try {

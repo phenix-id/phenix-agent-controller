@@ -988,7 +988,9 @@
 			"IRecordOfString": {
 				"properties": {},
 				"type": "object",
-				"additionalProperties": {}
+				"additionalProperties": {
+					"type": "string"
+				}
 			},
 			"DidNymTransaction": {
 				"properties": {
@@ -5021,6 +5023,47 @@
 						}
 					}
 				}
+			}
+		},
+		"/multi-tenancy/dids/rotate/{tenantId}/{connectionId}": {
+			"post": {
+				"operationId": "RotateDids",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"tags": [
+					"MultiTenancy"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tenantId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/multi-tenancy/checkCloudWalletExists/{tenantId}": {
