@@ -2,7 +2,9 @@ import type { RecordId } from './examples'
 import type {
   AnonCredsCredentialDefinition,
   AnonCredsDidCommCredentialFormat,
+  AnonCredsDidCommProofFormat,
   LegacyIndyCredentialFormat,
+  LegacyIndyDidCommProofFormat,
   RegisterCredentialDefinitionReturnStateAction,
   RegisterCredentialDefinitionReturnStateFailed,
   RegisterCredentialDefinitionReturnStateFinished,
@@ -42,6 +44,8 @@ import type {
   DidCommMessage,
   DidCommRouting,
   DidCommAttachment,
+  DidCommProofFormatPayload,
+  DidCommDifPresentationExchangeProofFormat,
 } from '@credo-ts/didcomm'
 import type { KeyAlgorithm } from '@openwallet-foundation/askar-nodejs'
 import type { DIDDocument } from 'did-resolver'
@@ -101,6 +105,7 @@ export interface ProofRequestMessageResponse {
 
 // type CredentialFormats = [CredentialFormat]
 type CredentialFormats = [LegacyIndyCredentialFormat, AnonCredsDidCommCredentialFormat, DidCommJsonLdCredentialFormat]
+type ProofFormats = [LegacyIndyDidCommProofFormat, AnonCredsDidCommProofFormat, DidCommDifPresentationExchangeProofFormat]
 
 enum ProtocolVersion {
   v1 = 'v1',
@@ -273,8 +278,9 @@ export interface RequestProofOptions {
 
 // TODO: added type in protocolVersion
 export interface RequestProofProposalOptions {
+  protocolVersion: ProtocolVersion
   connectionId: string
-  proofFormats: any
+  proofFormats: DidCommProofFormatPayload<ProofFormats, 'createProposal'>
   goalCode?: string
   parentThreadId?: string
   autoAcceptProof?: DidCommAutoAcceptProof
@@ -282,8 +288,8 @@ export interface RequestProofProposalOptions {
 }
 
 export interface AcceptProofProposal {
-  proofRecordId: string
-  proofFormats: any
+  proofExchangeRecordId: string
+  proofFormats: DidCommProofFormatPayload<ProofFormats, 'acceptProposal'>
   comment?: string
   autoAcceptProof?: DidCommAutoAcceptProof
   goalCode?: string
