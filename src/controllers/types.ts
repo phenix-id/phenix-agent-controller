@@ -115,7 +115,7 @@ export interface ProposeCredentialOptions {
 }
 
 export interface AcceptCredentialProposalOptions {
-  credentialRecordId: string
+  credentialExchangeRecordId: string
   credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptProposal'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
@@ -137,7 +137,7 @@ type CredentialFormatType =
   | AnonCredsDidCommCredentialFormat
 
 export interface CreateOfferOobOptions {
-  protocolVersion: string
+  protocolVersion: ProtocolVersion
   credentialFormats: DidCommCredentialFormatPayload<CredentialFormatType[], 'createOffer'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
@@ -201,18 +201,18 @@ export interface V2OfferCredentialOptions {
 }
 
 export interface AcceptCredential {
-  credentialRecordId: RecordId
+  credentialExchangeRecordId: RecordId
 }
 
 export interface CredentialOfferOptions {
-  credentialRecordId: RecordId
+  credentialExchangeRecordId: RecordId
   credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptOffer'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
 }
 
 export interface AcceptCredentialRequestOptions {
-  credentialRecordId: RecordId
+  credentialExchangeRecordId: RecordId
   credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptRequest'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
