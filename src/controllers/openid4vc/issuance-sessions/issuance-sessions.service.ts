@@ -4,7 +4,7 @@ import type { Request as Req } from 'express'
 import { type OpenId4VcIssuanceSessionState } from '@credo-ts/openid4vc'
 import { OpenId4VcIssuanceSessionRepository } from '@credo-ts/openid4vc'
 
-import { SignerMethod } from '../../../enums/enum'
+import { CredentialFormat, SignerMethod } from '../../../enums/enum'
 import { BadRequestError, NotFoundError } from '../../../errors/errors'
 
 import { checkAndCreateStatusList, getServerUrl, revokeCredentialInStatusList } from '../../../utils/statusListService'
