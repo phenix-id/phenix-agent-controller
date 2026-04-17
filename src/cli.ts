@@ -1,4 +1,5 @@
 import type { AriesRestConfig } from './cliAgent.js'
+import type { RetentionConfig } from './types/RetentionTypes.js'
 
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
@@ -51,6 +52,7 @@ interface Parsed {
   'status-list-server-url'?: string
   'status-list-api-key'?: string
   'status-list-default-size'?: number
+  retention?: RetentionConfig
 }
 
 interface InboundTransport {
@@ -225,5 +227,6 @@ export async function runCliServer() {
     statusListServerUrl: parsed['status-list-server-url'],
     statusListApiKey: parsed['status-list-api-key'],
     statusListDefaultSize: parsed['status-list-default-size'],
+    retention: parsed.retention,
   } as AriesRestConfig)
 }
