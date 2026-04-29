@@ -127,10 +127,6 @@ export interface AriesRestConfig {
   schemaFileServerURL?: string
   apiKey: string
   updateJwtSecret?: boolean
-  statusListServerUrl?: string
-  statusListApiKey?: string
-  statusListDefaultSize?: number
-  retention?: RetentionConfig
 }
 
 export async function readRestConfig(path: string) {
@@ -396,23 +392,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     walletScheme,
     apiKey,
     updateJwtSecret,
-    statusListServerUrl,
-    statusListApiKey,
-    statusListDefaultSize,
     ...afjConfig
   } = restConfig
-
-  if (statusListServerUrl) {
-    process.env.STATUS_LIST_SERVER_URL = statusListServerUrl
-  } else {
-    throw new Error('statusListServerUrl is required in the configuration')
-  }
-  if (statusListApiKey) {
-    process.env.STATUS_LIST_API_KEY = statusListApiKey
-  }
-  if (statusListDefaultSize) {
-    process.env.STATUS_LIST_DEFAULT_SIZE = String(statusListDefaultSize)
-  }
 
   const logger = new TsLogger(logLevel ?? LogLevel.error)
 

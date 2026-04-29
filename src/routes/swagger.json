@@ -2211,14 +2211,8 @@
 									}
 								},
 								"type": "object"
-							},
-							"preAuthorizedCode": {
-								"type": "string"
 							}
 						},
-						"required": [
-							"authorizationServerUrl"
-						],
 						"type": "object"
 					},
 					"issuanceMetadata": {
@@ -5264,7 +5258,7 @@
 	},
 	"info": {
 		"title": "credo-controller",
-		"version": "2.0.0",
+		"version": "2.1.3",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
 			"name": "Apache-2.0"
