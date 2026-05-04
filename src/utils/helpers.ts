@@ -233,8 +233,6 @@ async function fetchPlatformToken(
     return cachedToken
   }
 
-  console.log(`[${label}] fetching token from:`, tokenUrl)
-
   let tokenResponse
   try {
     tokenResponse = await axios.post<any>(
@@ -244,13 +242,6 @@ async function fetchPlatformToken(
     )
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error(`[${label}] token request failed:`, {
-        url: tokenUrl,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message,
-      })
       throw new Error(
         `[${label}] platform token request failed with status ${error.response?.status ?? 'no response'}: ${JSON.stringify(error.response?.data ?? error.message)}`,
       )
@@ -265,12 +256,6 @@ async function fetchPlatformToken(
 
   const expiresAt = getTokenExpiry(token)
   tokenCache.set(clientId, { token, expiresAt })
-  console.log(
-    `[${label}] token cached for clientId:`,
-    clientId,
-    '| expires at:',
-    new Date(expiresAt * 1000).toISOString(),
-  )
 
   return token
 }
@@ -283,7 +268,6 @@ async function checkTrustCertificatesExist(
   token?: string,
 ): Promise<boolean> {
   const matchUrl = trustServiceUrl
-  console.log(`[${label}] calling match API:`, matchUrl)
 
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
 
@@ -294,25 +278,9 @@ async function checkTrustCertificatesExist(
       { headers: { 'Content-Type': 'application/json', accept: 'application/json', ...authHeaders } },
     )
 
-    console.log(`[${label}] match response status:`, matchResponse.status)
-
-    const isTrusted = matchResponse.data?.matched === true
-    console.log(`[${label}] isTrusted:`, isTrusted)
-
-    if (!isTrusted) {
-      console.warn(`[${label}] certificate chain not trusted${tenantId ? ` for tenantId: ${tenantId}` : ''}`)
-    }
-
-    return isTrusted
+    return matchResponse.data?.matched === true
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error(`[${label}] match request failed:`, {
-        url: matchUrl,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message,
-      })
       throw new Error(
         `[${label}] trust-service match request failed with status ${error.response?.status ?? 'no response'}: ${JSON.stringify(error.response?.data ?? error.message)}`,
       )
@@ -347,10 +315,6 @@ export async function checkX509Certificates(
     resolvedTenantId = tenantId
     if (!resolvedTenantId) throw new Error(`[${label}] tenantId is required for shared agent but was not provided`)
   }
-
-  console.log(
-    `[${label}] agent type: ${isDedicated ? 'dedicated' : 'shared'}, certificate count: ${x509Certificates.length}`,
-  )
 
   const token = await fetchPlatformToken(tokenUrl, clientId, clientSecret, label)
 

@@ -97,7 +97,6 @@ export async function checkAndCreateStatusList(agent: Agent, listId: string, iss
     })
 
     if (res.status === 404) {
-      console.log(`Status list ${listId} not found, creating a new one...`)
       const size = listSize || Number(process.env.STATUS_LIST_DEFAULT_SIZE)
       const statusList = new StatusList(new Array(size).fill(0), 1)
 
@@ -119,14 +118,11 @@ export async function checkAndCreateStatusList(agent: Agent, listId: string, iss
         const errBody = await postRes.text()
         throw new Error(`Failed to create list on server: ${postRes.status} ${errBody}`)
       }
-
-      console.log(`Successfully created and published new status list ${listId}`)
     } else if (!res.ok) {
       const errBody = await res.text().catch(() => '')
       throw new Error(`Failed to check status list ${listId} at ${uri}: ${res.status} ${res.statusText} ${errBody}`)
     }
   } catch (error) {
-    console.error(`Error in checkAndCreateStatusList:`, error)
     throw error
   } finally {
     releaseLock!()

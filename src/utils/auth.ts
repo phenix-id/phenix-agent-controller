@@ -25,7 +25,6 @@ const SUPPORTED_AUTH_TYPES = Object.values(AuthTypes) satisfies AuthType[]
 export function getAuthType(): AuthType {
   const authType = process.env.TRUST_SERVICE_AUTH_TYPE as AuthType
   if (!authType) {
-    console.warn('[getAuthType] TRUST_SERVICE_AUTH_TYPE is not set — defaulting to NoAuth')
     return AuthTypes.NoAuth
   }
   if (!SUPPORTED_AUTH_TYPES.includes(authType)) {
@@ -38,7 +37,6 @@ export function getAuthType(): AuthType {
 
 export function validateAuthConfig(): void {
   const authType = getAuthType()
-  console.log('[validateAuthConfig] TRUST_SERVICE_AUTH_TYPE:', authType)
 
   const validators: Record<AuthType, () => void> = {
     NoAuth: () => {
@@ -56,5 +54,4 @@ export function validateAuthConfig(): void {
   }
 
   validators[authType]()
-  console.log('[validateAuthConfig] configuration valid for auth type:', authType)
 }

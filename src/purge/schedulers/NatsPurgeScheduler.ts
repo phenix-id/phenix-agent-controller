@@ -33,7 +33,7 @@ export class NatsPurgeScheduler {
   private ttlSeconds = 0
   private recordTypes: PurgeRecordType[] = []
 
-  async start(agent: Agent, config: PurgeConfig, webhookUrl: string | undefined): Promise<void> {
+  public async start(agent: Agent, config: PurgeConfig, webhookUrl: string | undefined): Promise<void> {
     const { natsConfig } = config
     this.ttlSeconds = natsConfig.ttlSeconds
     this.recordTypes = natsConfig.recordTypes
@@ -47,28 +47,20 @@ export class NatsPurgeScheduler {
     this.js = this.nc.jetstream()
     this.jsm = await this.nc.jetstreamManager()
 
-    console.log(`[Purge][NATS] Connected to NATS server(s): ${natsConfig.nats.servers}`)
-    console.log('[Purge][NATS] Provisioning streams...')
     agent.config.logger.info('[Purge] Provisioning NATS streams...')
     await this.provisionStreams()
-    console.log('[Purge][NATS] Streams ready')
     agent.config.logger.info('[Purge] NATS streams ready')
 
-    console.log('[Purge][NATS] Provisioning consumers...')
     agent.config.logger.info('[Purge] Provisioning NATS consumers...')
     await this.provisionConsumers()
-    console.log(`[Purge][NATS] Consumers ready — recordTypes=${this.recordTypes.join(', ')}`)
     agent.config.logger.info('[Purge] NATS consumers ready')
 
     await this.startWorkers(agent, webhookUrl)
 
-    console.log(
-      `[Purge][NATS] Scheduler started — ttlSeconds=${this.ttlSeconds} recordTypes=${this.recordTypes.join(', ')}`,
-    )
     agent.config.logger.info('[Purge] NatsPurgeScheduler started', { ttlSeconds: this.ttlSeconds })
   }
 
-  async schedulePurge(
+  public async schedulePurge(
     recordType: PurgeRecordType,
     recordId: string,
     tenantId: string,
@@ -90,13 +82,9 @@ export class NatsPurgeScheduler {
     h.set('Nats-Msg-Id', `purge-${recordType}-${tenantScope}-${recordId}`)
 
     await this.js.publish(scheduleSubject, sc.encode(JSON.stringify(job)), { headers: h })
-
-    console.info(
-      `[Purge] Scheduled: ${recordType} recordId=${recordId} tenantId="${tenantId}" agentMode=${agentMode} fireAt=${fireAt}`,
-    )
   }
 
-  async stop(): Promise<void> {
+  public async stop(): Promise<void> {
     if (this.nc) {
       await this.nc.drain()
       this.nc = null
@@ -127,8 +115,6 @@ export class NatsPurgeScheduler {
       if (this.isAlreadyExistsError(err)) {
         await this.jsm.streams.update(config.name, config)
       } else if (err?.message?.includes('subjects overlap')) {
-        // Stale streams from a previous version — delete and retry
-        console.warn('[Purge] Subject overlap detected — purging stale streams and retrying')
         await this.deleteStaleStreams(config.subjects)
         await this.jsm.streams.add(config)
       } else {
@@ -147,7 +133,6 @@ export class NatsPurgeScheduler {
         (s: string) => s.startsWith('purge.schedule.') || s.startsWith('purge.execute.'),
       )
       if (isPurgeStream) {
-        console.warn(`[Purge] Deleting stale purge stream: ${stream.config.name}`)
         await this.jsm.streams.delete(stream.config.name)
       }
     }
@@ -177,7 +162,6 @@ export class NatsPurgeScheduler {
 
     for (const recordType of this.recordTypes) {
       const consumerName = PURGE_CONSUMER_NAMES[recordType]
-      console.log(`[Purge][NATS] Starting worker — recordType=${recordType} consumer=${consumerName}`)
       agent.config.logger.info('[Purge] Starting worker', { recordType, consumerName })
       this.runWorkerWithRestart(agent, recordType, consumerName, webhookUrl)
     }
@@ -200,22 +184,16 @@ export class NatsPurgeScheduler {
       await worker.start(agent, consumer)
     }
 
-    launch()
-      .then(() => console.log(`[Purge][NATS] Worker launched — consumer=${consumerName}`))
-      .catch((err: Error) => {
-        if (!this.nc) return // scheduler stopped — do not restart
-        console.error(
-          `[Purge][NATS] Worker crashed — consumer=${consumerName} attempt=${attempt} retryIn=${delayMs}ms`,
-          err?.message,
-        )
-        agent.config.logger.error('[Purge] Worker crashed — restarting', {
-          consumerName,
-          attempt,
-          delayMs,
-          error: err?.message,
-        })
-        setTimeout(() => this.runWorkerWithRestart(agent, recordType, consumerName, webhookUrl, attempt + 1), delayMs)
+    launch().catch((err: Error) => {
+      if (!this.nc) return // scheduler stopped — do not restart
+      agent.config.logger.error('[Purge] Worker crashed — restarting', {
+        consumerName,
+        attempt,
+        delayMs,
+        error: err?.message,
       })
+      setTimeout(() => this.runWorkerWithRestart(agent, recordType, consumerName, webhookUrl, attempt + 1), delayMs)
+    })
   }
 
   private isAlreadyExistsError(err: any): boolean {

@@ -7,7 +7,6 @@ import { SCOPES } from '../../../enums'
 import ErrorHandlingService from '../../../errorHandlingService'
 import { PurgeRecordType } from '../../../purge/PurgeTypes'
 import { SchedulePurge } from '../../../purge/decorators/SchedulePurge'
-
 // import { AgentWithRootOrTenant } from '../../types/agent'
 import { OpenId4VcIssuanceSessionsCreateOffer } from '../types/issuer.types'
 
