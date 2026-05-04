@@ -79,8 +79,6 @@ class x509Service {
 
     let authorityKeyID, subjectPublicKeyID, authorityKeyKmsId
 
-    agent.config.logger.debug(`createCertificate options:`, options)
-
     if (options.authorityKey && options?.authorityKey?.seed) {
       const { privateJwk } = transformSeedToPrivateJwk({
         type: getTypeFromCurve(options.authorityKey.keyType ?? 'P-256'),
@@ -114,8 +112,6 @@ class x509Service {
         subjectPublicKeyID = publicJwk
       }
     }
-    agent.config.logger.info('This is subjectPublicKeyID', subjectPublicKeyID)
-
     const certificate = await agent.x509.createCertificate({
       authorityKey: Kms.PublicJwk.fromPublicJwk(authorityKeyID),
       serialNumber: options.serialNumber,
@@ -219,8 +215,6 @@ export const x509ServiceT = new x509Service()
 export async function createKey(agent: Agent, keyType: KeyAlgorithm) {
   try {
     const seed = await generateSecretKey(keyType === KeyAlgorithm.EcSecp256r1 ? 64 : 32)
-
-    agent.config.logger.debug(`createKey: got seed ${seed}`)
 
     const normalizedCurve = keyAlgorithmToCurve[keyType]
     if (!normalizedCurve) throw new Error('Unspported key type for method importKey')

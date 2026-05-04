@@ -152,14 +152,13 @@ export const setupAgent = async ({
       if (typeof req.query.d_m === 'string') {
         const invitation = await DidCommConnectionInvitationMessage.fromUrl(req.url.replace('d_m=', 'c_i='))
         res.send(invitation.toJSON())
-      }
-      if (typeof req.query.c_i === 'string') {
+      } else if (typeof req.query.c_i === 'string') {
         const invitation = await DidCommConnectionInvitationMessage.fromUrl(req.url)
         res.send(invitation.toJSON())
       } else {
         const { outOfBandInvitation } = await agent.modules.didcomm.oob.createInvitation()
 
-        res.send(outOfBandInvitation.toUrl({ domain: endpoints + '/invitation' }))
+        res.send(outOfBandInvitation.toUrl({ domain: endpoints[0] + '/invitation' }))
       }
     },
   )

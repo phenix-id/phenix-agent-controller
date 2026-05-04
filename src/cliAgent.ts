@@ -298,10 +298,8 @@ const getModules = (
       ) => {
         //TODO: We need to trust the certificate tenant wise, for that we need to fetch those details from platform
         const tenantId = agentContext.contextCorrelationId
-        console.log('[getTrustedCertificatesForVerification] tenantId from agentContext:', tenantId)
 
         const authType = getAuthType()
-        console.log('[getTrustedCertificatesForVerification] authType:', authType)
 
         if (authType === AuthTypes.ClientAuth) {
           return await getX509CertsByClientToken(tenantId, certificateChain)
