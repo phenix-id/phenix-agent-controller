@@ -66,7 +66,12 @@ import { readFile } from 'fs/promises'
 
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
 import { validatePurgeConfig } from './purge/PurgeConfigValidator'
-import { initPurgeSchedulers, stopPurgeSchedulers, getNatsPurgeScheduler, getCronPurgeScheduler } from './purge/PurgeSchedulerFactory'
+import {
+  initPurgeSchedulers,
+  stopPurgeSchedulers,
+  getNatsPurgeScheduler,
+  getCronPurgeScheduler,
+} from './purge/PurgeSchedulerFactory'
 import { buildPurgeConfig } from './purge/PurgeTypes'
 import { setupServer } from './server'
 import { AuthTypes, getAuthType } from './utils/auth'
@@ -367,7 +372,6 @@ const getWithTenantModules = (
 //   return secretKey
 // }
 
-
 export async function runRestAgent(restConfig: AriesRestConfig) {
   const {
     endpoints,
@@ -461,7 +465,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   let modules
 
   if (afjConfig.tenancy) {
-    modules = await getWithTenantModules(
+    modules = getWithTenantModules(
       networkConfig,
       didRegistryContractAddress || '',
       fileServerToken || '',

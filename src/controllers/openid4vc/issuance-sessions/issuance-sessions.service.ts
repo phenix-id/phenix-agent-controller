@@ -178,7 +178,6 @@ class IssuanceSessionsService {
     }
   }
 
-
   public async getIssuanceSessionsById(agentReq: Req, sessionId: string) {
     const issuer = agentReq.agent.modules.openid4vc.issuer
     if (!issuer) {

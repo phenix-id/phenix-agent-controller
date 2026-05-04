@@ -4,7 +4,7 @@ import type { Consumer } from 'nats'
 import { RecordNotFoundError } from '@credo-ts/core'
 import { StringCodec } from 'nats'
 
-import { PURGE_CONSUMER_MAX_DELIVER } from './PurgeConstants'
+import { PURGE_CONSUMER_MAX_DELIVER, PURGE_WORKER_RESTART_DELAY_MS } from './PurgeConstants'
 import { deletePurgeRecord } from './PurgeDeleteRecord'
 import { sendPurgeWebhook, PurgeDeletionStatus } from './PurgeWebhook'
 import type { PurgeJob } from './PurgeTypes'
@@ -28,13 +28,21 @@ export class PurgeWorker {
     agent.config.logger.info('[Purge] Worker started', { consumer: this.consumerName })
 
     while (true) {
-      const messages = await consumer.consume()
-      console.log(`[Purge][Worker] Consuming messages — consumer=${this.consumerName}`)
-      for await (const msg of messages) {
-        await this.processMessage(msg, agent)
+      try {
+        const messages = await consumer.consume()
+        console.log(`[Purge][Worker] Consuming messages — consumer=${this.consumerName}`)
+        for await (const msg of messages) {
+          await this.processMessage(msg, agent)
+        }
+        console.warn(`[Purge][Worker] Consume loop ended — restarting consumer=${this.consumerName}`)
+        agent.config.logger.warn('[Purge] Consume loop ended — restarting', { consumer: this.consumerName })
+      } catch (err: any) {
+        agent.config.logger.error('[Purge] Consume loop error — restarting after delay', {
+          consumer: this.consumerName,
+          error: err?.message,
+        })
+        await new Promise((resolve) => setTimeout(resolve, PURGE_WORKER_RESTART_DELAY_MS))
       }
-      console.warn(`[Purge][Worker] Consume loop ended — restarting consumer=${this.consumerName}`)
-      agent.config.logger.warn('[Purge] Consume loop ended — restarting', { consumer: this.consumerName })
     }
   }
 
@@ -63,7 +71,9 @@ export class PurgeWorker {
       return
     }
 
-    console.log(`[Purge][Worker] Job received — recordType=${recordType} recordId=${recordId} tenantId="${tenantId}" deliveryCount=${deliveryCount}`)
+    console.log(
+      `[Purge][Worker] Job received — recordType=${recordType} recordId=${recordId} tenantId="${tenantId}" deliveryCount=${deliveryCount}`,
+    )
     logger.info('[Purge] Job received', { recordId, recordType, tenantId, deliveryCount })
 
     try {
@@ -75,15 +85,28 @@ export class PurgeWorker {
         await deletePurgeRecord(agent, this.recordType, recordId)
       }
 
-      console.log(`[Purge][Worker] Record deleted — recordType=${recordType} recordId=${recordId} tenantId="${tenantId}"`)
+      console.log(
+        `[Purge][Worker] Record deleted — recordType=${recordType} recordId=${recordId} tenantId="${tenantId}"`,
+      )
       logger.info('[Purge] Record deleted', { recordId, recordType, tenantId })
       msg.ack()
 
       if (this.webhookUrl) {
         try {
-          await sendPurgeWebhook(this.webhookUrl, recordId, this.recordType, tenantId, PurgeDeletionStatus.DELETED, logger)
+          await sendPurgeWebhook(
+            this.webhookUrl,
+            recordId,
+            this.recordType,
+            tenantId,
+            PurgeDeletionStatus.DELETED,
+            logger,
+          )
         } catch (webhookErr: any) {
-          logger.warn('[Purge] Webhook delivery failed after deletion', { recordId, recordType, error: webhookErr?.message })
+          logger.warn('[Purge] Webhook delivery failed after deletion', {
+            recordId,
+            recordType,
+            error: webhookErr?.message,
+          })
         }
       }
     } catch (err: any) {
@@ -94,26 +117,43 @@ export class PurgeWorker {
 
         if (this.webhookUrl) {
           try {
-            await sendPurgeWebhook(this.webhookUrl, recordId, this.recordType, tenantId, PurgeDeletionStatus.ALREADY_ABSENT, logger)
+            await sendPurgeWebhook(
+              this.webhookUrl,
+              recordId,
+              this.recordType,
+              tenantId,
+              PurgeDeletionStatus.ALREADY_ABSENT,
+              logger,
+            )
           } catch (webhookErr: any) {
-            logger.warn('[Purge] Webhook delivery failed for already-absent record', { recordId, recordType, error: webhookErr?.message })
+            logger.warn('[Purge] Webhook delivery failed for already-absent record', {
+              recordId,
+              recordType,
+              error: webhookErr?.message,
+            })
           }
         }
         return
       }
 
-      console.warn(`[Purge][Worker] Job failed — recordType=${recordType} recordId=${recordId} deliveryCount=${deliveryCount}`, err?.message)
+      console.warn(
+        `[Purge][Worker] Job failed — recordType=${recordType} recordId=${recordId} deliveryCount=${deliveryCount}`,
+        err?.message,
+      )
       logger.warn('[Purge] Job failed', { recordId, recordType, deliveryCount, error: err?.message })
 
       if (deliveryCount >= PURGE_CONSUMER_MAX_DELIVER) {
-        console.error(`[Purge][Worker] Job dropped after max retries — recordType=${recordType} recordId=${recordId} tenantId="${tenantId}"`)
+        console.error(
+          `[Purge][Worker] Job dropped after max retries — recordType=${recordType} recordId=${recordId} tenantId="${tenantId}"`,
+        )
         logger.error('[Purge] Job dropped after max retries', { recordId, recordType, tenantId, deliveryCount })
         msg.ack()
       } else {
-        console.log(`[Purge][Worker] Nacking job for retry — recordType=${recordType} recordId=${recordId} deliveryCount=${deliveryCount}`)
+        console.log(
+          `[Purge][Worker] Nacking job for retry — recordType=${recordType} recordId=${recordId} deliveryCount=${deliveryCount}`,
+        )
         msg.nak()
       }
     }
   }
-
 }

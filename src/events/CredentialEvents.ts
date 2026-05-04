@@ -12,7 +12,10 @@ export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
     DidCommCredentialEventTypes.DidCommCredentialStateChanged,
     async (event: DidCommCredentialStateChangedEvent) => {
       const record = event.payload.credentialExchangeRecord
-      const tenantId = (!event.metadata.contextCorrelationId || event.metadata.contextCorrelationId === 'default') ? event.metadata.contextCorrelationId : event.metadata.contextCorrelationId.split('tenant-')[1]
+      const tenantId =
+        !event.metadata.contextCorrelationId || event.metadata.contextCorrelationId === 'default'
+          ? event.metadata.contextCorrelationId
+          : event.metadata.contextCorrelationId.split('tenant-')[1]
 
       const body: Record<string, unknown> = {
         ...record.toJSON(),
@@ -28,7 +31,9 @@ export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
           await (agent as Agent<RestMultiTenantAgentModules>).modules.tenants.withTenantAgent(
             { tenantId: body.contextCorrelationId as string },
             async (tenantAgent) => {
-              connectionRecord = await tenantAgent.modules.didcomm.connections.findById(record.connectionId ? record.connectionId : '')
+              connectionRecord = await tenantAgent.modules.didcomm.connections.findById(
+                record.connectionId ? record.connectionId : '',
+              )
             },
           )
         } else {

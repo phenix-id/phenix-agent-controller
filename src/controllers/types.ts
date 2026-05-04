@@ -105,7 +105,11 @@ export interface ProofRequestMessageResponse {
 
 // type CredentialFormats = [CredentialFormat]
 type CredentialFormats = [LegacyIndyCredentialFormat, AnonCredsDidCommCredentialFormat, DidCommJsonLdCredentialFormat]
-type ProofFormats = [LegacyIndyDidCommProofFormat, AnonCredsDidCommProofFormat, DidCommDifPresentationExchangeProofFormat]
+type ProofFormats = [
+  LegacyIndyDidCommProofFormat,
+  AnonCredsDidCommProofFormat,
+  DidCommDifPresentationExchangeProofFormat,
+]
 
 enum ProtocolVersion {
   v1 = 'v1',

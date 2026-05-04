@@ -63,7 +63,9 @@ export class NatsPurgeScheduler {
 
     await this.startWorkers(agent, webhookUrl)
 
-    console.log(`[Purge][NATS] Scheduler started — ttlSeconds=${this.ttlSeconds} recordTypes=${this.recordTypes.join(', ')}`)
+    console.log(
+      `[Purge][NATS] Scheduler started — ttlSeconds=${this.ttlSeconds} recordTypes=${this.recordTypes.join(', ')}`,
+    )
     agent.config.logger.info('[Purge] NatsPurgeScheduler started', { ttlSeconds: this.ttlSeconds })
   }
 
@@ -90,7 +92,9 @@ export class NatsPurgeScheduler {
 
     await this.js.publish(scheduleSubject, sc.encode(JSON.stringify(job)), { headers: h })
 
-    console.info(`[Purge] Scheduled: ${recordType} recordId=${recordId} tenantId="${tenantId}" agentMode=${agentMode} fireAt=${fireAt}`)
+    console.info(
+      `[Purge] Scheduled: ${recordType} recordId=${recordId} tenantId="${tenantId}" agentMode=${agentMode} fireAt=${fireAt}`,
+    )
   }
 
   async stop(): Promise<void> {
@@ -201,8 +205,16 @@ export class NatsPurgeScheduler {
       .then(() => console.log(`[Purge][NATS] Worker launched — consumer=${consumerName}`))
       .catch((err: Error) => {
         if (!this.nc) return // scheduler stopped — do not restart
-        console.error(`[Purge][NATS] Worker crashed — consumer=${consumerName} attempt=${attempt} retryIn=${delayMs}ms`, err?.message)
-        agent.config.logger.error('[Purge] Worker crashed — restarting', { consumerName, attempt, delayMs, error: err?.message })
+        console.error(
+          `[Purge][NATS] Worker crashed — consumer=${consumerName} attempt=${attempt} retryIn=${delayMs}ms`,
+          err?.message,
+        )
+        agent.config.logger.error('[Purge] Worker crashed — restarting', {
+          consumerName,
+          attempt,
+          delayMs,
+          error: err?.message,
+        })
         setTimeout(() => this.runWorkerWithRestart(agent, recordType, consumerName, webhookUrl, attempt + 1), delayMs)
       })
   }
@@ -217,4 +229,3 @@ export class NatsPurgeScheduler {
     )
   }
 }
-

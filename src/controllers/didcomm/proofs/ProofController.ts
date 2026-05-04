@@ -1,6 +1,4 @@
-import type {
-  PeerDidNumAlgo2CreateOptions,
-} from '@credo-ts/core'
+import type { PeerDidNumAlgo2CreateOptions } from '@credo-ts/core'
 
 import {
   AcceptProofRequestOptions,
@@ -156,21 +154,23 @@ export class ProofController extends Controller {
         invitationDid = createRequestOptions?.invitationDid
       } else {
         routing = await request.agent.modules.didcomm.mediationRecipient.getRouting({})
-        const {didDocument, keys} = createPeerDidDocumentFromServices([
-          {
-            id: 'didcomm',
-            recipientKeys: [routing.recipientKey],
-            routingKeys: routing.routingKeys,
-            serviceEndpoint: routing.endpoints[0],
-          }
-        ],
-        true)
+        const { didDocument, keys } = createPeerDidDocumentFromServices(
+          [
+            {
+              id: 'didcomm',
+              recipientKeys: [routing.recipientKey],
+              routingKeys: routing.routingKeys,
+              serviceEndpoint: routing.endpoints[0],
+            },
+          ],
+          true,
+        )
         const did = await request.agent.dids.create<PeerDidNumAlgo2CreateOptions>({
           didDocument,
           method: 'peer',
           options: {
             numAlgo: PeerDidNumAlgo.MultipleInceptionKeyWithoutDoc,
-            keys
+            keys,
           },
         })
         invitationDid = did.didState.did
@@ -264,7 +264,9 @@ export class ProofController extends Controller {
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   public async acceptPresentation(@Request() request: Req, @Path('proofRecordId') proofRecordId: string) {
     try {
-      const proof = await request.agent.modules.didcomm.proofs.acceptPresentation({ proofExchangeRecordId:proofRecordId })
+      const proof = await request.agent.modules.didcomm.proofs.acceptPresentation({
+        proofExchangeRecordId: proofRecordId,
+      })
       return proof
     } catch (error) {
       throw ErrorHandlingService.handle(error)

@@ -56,7 +56,10 @@ export function buildPurgeConfig(): PurgeConfig | undefined {
       enabled: natsEnabled,
       ttlSeconds: parseTtlSeconds(process.env.PURGE_NATS_TTL_SECONDS, 'PURGE_NATS_TTL_SECONDS'),
       nats: {
-        servers: (process.env.NATS_SERVERS || 'nats://localhost:4222').split(',').map((s) => s.trim()).filter(Boolean),
+        servers: (process.env.NATS_SERVERS || 'nats://localhost:4222')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
         nkeySeed: process.env.NATS_NKEY_SEED,
         credentialsFile: process.env.NATS_CREDENTIALS_FILE,
         username: process.env.NATS_USER,

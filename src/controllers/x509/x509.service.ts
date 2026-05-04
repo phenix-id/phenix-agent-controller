@@ -158,14 +158,15 @@ class x509Service {
       }
       agent.config.logger.info(`Keys matched with certificate`)
     } catch (error) {
-      agent.config.logger.error(`Error caught`)
-
       // If the key already exists, we assume the self-signed certificate is already created
       if (error instanceof Kms.KeyManagementKeyExistsError) {
-        // eslint-disable-next-line no-console
-        console.error('key already exists while importing certificate')
+        agent.config.logger.warn(
+          '[ImportX509Certificates] Key already exists — assuming certificate was already imported',
+        )
       } else {
-        agent.config.logger.error(`${JSON.stringify(error)}`)
+        agent.config.logger.error('[ImportX509Certificates] Failed to import key', {
+          message: (error as Error)?.message,
+        })
         throw error
       }
     }

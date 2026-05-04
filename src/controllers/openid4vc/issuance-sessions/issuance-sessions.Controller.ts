@@ -112,10 +112,7 @@ export class IssuanceSessionsController extends Controller {
    * Revoke credentials in an issuance session by session ID
    */
   @Post('{issuanceSessionId}/revoke')
-  public async revokeSessionById(
-    @Request() request: Req,
-    @Path('issuanceSessionId') issuanceSessionId: string,
-  ) {
+  public async revokeSessionById(@Request() request: Req, @Path('issuanceSessionId') issuanceSessionId: string) {
     try {
       return await issuanceSessionService.revokeBySessionId(request, issuanceSessionId)
     } catch (error) {

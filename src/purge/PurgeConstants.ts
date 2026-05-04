@@ -32,7 +32,7 @@ export const PURGE_CONSUMER_ACK_WAIT_NS = 30 * 1_000_000_000
 export const PURGE_CONSUMER_MAX_DELIVER = 3
 
 export const PURGE_CONSUMER_BACKOFF_NS = [
-  5_000_000_000,  //  5s
+  5_000_000_000, //  5s
   30_000_000_000, // 30s
 ]
 
@@ -44,3 +44,5 @@ export const PURGE_WEBHOOK_PATHS: Record<PurgeRecordType, string> = {
 }
 
 export const PURGE_WEBHOOK_RETRY_DELAYS_MS = [1000, 5000, 30000]
+
+export const PURGE_WORKER_RESTART_DELAY_MS = 5_000

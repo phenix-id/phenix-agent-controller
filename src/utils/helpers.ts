@@ -347,7 +347,9 @@ export async function checkX509Certificates(
     if (!resolvedTenantId) throw new Error(`[${label}] tenantId is required for shared agent but was not provided`)
   }
 
-  console.log(`[${label}] agent type: ${isDedicated ? 'dedicated' : 'shared'}, certificate count: ${x509Certificates.length}`)
+  console.log(
+    `[${label}] agent type: ${isDedicated ? 'dedicated' : 'shared'}, certificate count: ${x509Certificates.length}`,
+  )
 
   const token = await fetchPlatformToken(tokenUrl, clientId, clientSecret, label)
 

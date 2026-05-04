@@ -1,6 +1,6 @@
 import type { InitConfig } from '@credo-ts/core'
 
-// import { PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+import { PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsModule,
   LegacyIndyDidCommProofFormatService,
@@ -31,7 +31,6 @@ import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import { askar } from '@openwallet-foundation/askar-nodejs'
 
 import { TsLogger } from './logger'
-import { PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 
 export const setupAgent = async ({
   endpoints,
@@ -149,20 +148,28 @@ export const setupAgent = async ({
 
   httpInbound.app.get(
     '/invitation',
-    async (req: { query: { d_m: any; c_i: any; oob: any }; url: string }, res: { send: (arg0: any) => void }) => {
-      if (typeof req.query.d_m === 'string') {
-        const invitation = await DidCommConnectionInvitationMessage.fromUrl(req.url.replace('d_m=', 'c_i='))
-        res.send(invitation.toJSON())
-      } else if (typeof req.query.c_i === 'string') {
-        const invitation = await DidCommConnectionInvitationMessage.fromUrl(req.url)
-        res.send(invitation.toJSON())
-      } else if (typeof req.query.oob === 'string') {
-        const invitation = parseInvitationUrl(req.url)
-        res.send(invitation.toJSON())
-      } else {
-        const { outOfBandInvitation } = await agent.modules.didcomm.oob.createInvitation()
+    async (
+      req: { query: { d_m: any; c_i: any; oob: any }; url: string },
+      res: { send: (arg0: any) => void; status: (code: number) => { send: (arg0: any) => void } },
+    ) => {
+      try {
+        if (typeof req.query.d_m === 'string') {
+          const invitation = DidCommConnectionInvitationMessage.fromUrl(req.url.replace('d_m=', 'c_i='))
+          res.send(invitation.toJSON())
+        } else if (typeof req.query.c_i === 'string') {
+          const invitation = DidCommConnectionInvitationMessage.fromUrl(req.url)
+          res.send(invitation.toJSON())
+        } else if (typeof req.query.oob === 'string') {
+          const invitation = parseInvitationUrl(req.url)
+          res.send(invitation.toJSON())
+        } else {
+          const { outOfBandInvitation } = await agent.modules.didcomm.oob.createInvitation()
 
-        res.send(outOfBandInvitation.toUrl({ domain: endpoints[0] + '/invitation' }))
+          res.send(outOfBandInvitation.toUrl({ domain: endpoints[0] + '/invitation' }))
+        }
+      } catch (err: any) {
+        logger.error('[/invitation] Failed to handle invitation request', { error: err?.message })
+        res.status(500).send({ error: 'Failed to process invitation request' })
       }
     },
   )

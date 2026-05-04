@@ -13,17 +13,10 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "outDir": "./build",
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "ESNext"
-    ]
+    "types": ["node"],
+    "lib": ["ESNext"]
   },
-  "include": [
-    "src/**/*",
-    "src/routes"
-  ],
+  "include": ["src/**/*", "src/routes"],
   "exclude": [
     "node_modules",
     "build",
