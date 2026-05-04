@@ -21,6 +21,7 @@ import {
   DidCommCredentialV2Protocol,
   DidCommModule,
   DidCommConnectionInvitationMessage,
+  parseInvitationUrl,
 } from '@credo-ts/didcomm'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@credo-ts/indy-vdr'
 import { agentDependencies, DidCommHttpInboundTransport } from '@credo-ts/node'
@@ -148,12 +149,15 @@ export const setupAgent = async ({
 
   httpInbound.app.get(
     '/invitation',
-    async (req: { query: { d_m: any; c_i: any }; url: string }, res: { send: (arg0: any) => void }) => {
+    async (req: { query: { d_m: any; c_i: any; oob: any }; url: string }, res: { send: (arg0: any) => void }) => {
       if (typeof req.query.d_m === 'string') {
         const invitation = await DidCommConnectionInvitationMessage.fromUrl(req.url.replace('d_m=', 'c_i='))
         res.send(invitation.toJSON())
       } else if (typeof req.query.c_i === 'string') {
         const invitation = await DidCommConnectionInvitationMessage.fromUrl(req.url)
+        res.send(invitation.toJSON())
+      } else if (typeof req.query.oob === 'string') {
+        const invitation = parseInvitationUrl(req.url)
         res.send(invitation.toJSON())
       } else {
         const { outOfBandInvitation } = await agent.modules.didcomm.oob.createInvitation()

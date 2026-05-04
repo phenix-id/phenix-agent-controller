@@ -27,7 +27,7 @@ class x509Service {
 
     const authorityKey = await createKey(agent as Agent, createX509Options.keyType)
     const AGENT_HOST = createX509Options.issuerAlternativeNameURL
-    const AGENT_DNS = AGENT_HOST.replace('https://', '')
+    const AGENT_DNS = new URL(AGENT_HOST).hostname
     const selfSignedx509certificate = await X509Service.createCertificate(agent.context, {
       authorityKey: Kms.PublicJwk.fromPublicJwk(authorityKey.publicJwk), //createX509Options.subjectKey,
       issuer: { countryName: createX509Options.countryName, commonName: createX509Options.commonName },
@@ -106,7 +106,7 @@ class x509Service {
 
         subjectPublicKeyID = importedKey.publicJwk
       } else {
-        const { keyId, publicJwk } = await agent.kms.createKey({
+        const { publicJwk } = await agent.kms.createKey({
           type: getTypeFromCurve(options.subjectPublicKey?.keyType ?? 'P-256'),
         })
         subjectPublicKeyID = publicJwk
@@ -114,6 +114,7 @@ class x509Service {
     }
     const certificate = await agent.x509.createCertificate({
       authorityKey: Kms.PublicJwk.fromPublicJwk(authorityKeyID),
+      subjectPublicKey: subjectPublicKeyID ? Kms.PublicJwk.fromPublicJwk(subjectPublicKeyID) : undefined,
       serialNumber: options.serialNumber,
       issuer: options.issuer,
       extensions: options.extensions,
@@ -128,8 +129,9 @@ class x509Service {
 
   public async ImportX509Certificates(agentReq: Req, options: X509ImportCertificateOptionsDto) {
     const agent = agentReq.agent
+    if (!options.privateKey) throw new Error('[ImportX509Certificates] privateKey is required')
     agent.config.logger.debug(`Start validating keys`)
-    const secretHexKey = await pemToRawEd25519PrivateKey(options.privateKey ?? '')
+    const secretHexKey = await pemToRawEd25519PrivateKey(options.privateKey)
     const privateKey = TypedArrayEncoder.fromHex(secretHexKey)
 
     agent.config.logger.debug(`Decode certificate`)

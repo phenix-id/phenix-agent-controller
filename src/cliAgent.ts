@@ -7,7 +7,7 @@ import type { AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import type { InitConfig } from '@credo-ts/core'
 import type { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
-// import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
+import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 import {
   AnonCredsDidCommCredentialFormatService,
   AnonCredsModule,
@@ -65,10 +65,11 @@ import express from 'express'
 import { readFile } from 'fs/promises'
 
 import { IndicioAcceptanceMechanism, IndicioTransactionAuthorAgreement, Network, NetworkName } from './enums'
-import { setupServer } from './server'
-import { buildPurgeConfig } from './purge/PurgeTypes'
 import { validatePurgeConfig } from './purge/PurgeConfigValidator'
 import { initPurgeSchedulers, stopPurgeSchedulers, getNatsPurgeScheduler, getCronPurgeScheduler } from './purge/PurgeSchedulerFactory'
+import { buildPurgeConfig } from './purge/PurgeTypes'
+import { setupServer } from './server'
+import { AuthTypes, getAuthType } from './utils/auth'
 import { isCustomDocumentLoaderEnabled } from './utils/config'
 import { CustomDocumentLoader } from './utils/customDocumentLoader'
 import { generateSecretKey } from './utils/helpers'
@@ -78,8 +79,6 @@ import {
   getX509CertsByClientToken,
   getX509CertsByUrl,
 } from './utils/oid4vc-agent'
-import { AuthTypes, getAuthType } from './utils/auth'
-import { PolygonDidRegistrar, PolygonDidResolver, PolygonModule } from '@ayanworks/credo-polygon-w3c-module'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -206,10 +205,10 @@ const getModules = (
       anoncreds,
     }),
     w3cCredentials: isCustomDocumentLoaderEnabled()
-      ? new W3cCredentialsModule()
-      : new W3cCredentialsModule({
+      ? new W3cCredentialsModule({
           documentLoader: CustomDocumentLoader,
-        }),
+        })
+      : new W3cCredentialsModule(),
     didcomm: new DidCommModule({
       processDidCommMessagesConcurrently: true,
       mediationRecipient: true,
@@ -219,7 +218,7 @@ const getModules = (
 
       basicMessages: true,
       connections: {
-        autoAcceptConnections: autoAcceptConnections || true,
+        autoAcceptConnections: autoAcceptConnections ?? true,
         peerNumAlgoForDidExchangeRequests: PeerDidNumAlgo.GenesisDoc,
         peerNumAlgoForDidRotation: PeerDidNumAlgo.ShortFormAndLongForm,
       },
@@ -469,7 +468,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       fileServerUrl || '',
       rpcUrl || '',
       schemaManagerContractAddress || '',
-      autoAcceptConnections || true,
+      autoAcceptConnections ?? true,
       autoAcceptCredentials || DidCommAutoAcceptCredential.Always,
       autoAcceptProofs || DidCommAutoAcceptProof.ContentApproved,
       walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
@@ -484,7 +483,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       fileServerUrl || '',
       rpcUrl || '',
       schemaManagerContractAddress || '',
-      autoAcceptConnections || true,
+      autoAcceptConnections ?? true,
       autoAcceptCredentials || DidCommAutoAcceptCredential.Always,
       autoAcceptProofs || DidCommAutoAcceptProof.ContentApproved,
       walletScheme || AskarMultiWalletDatabaseScheme.ProfilePerWallet,
@@ -581,15 +580,16 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     }
   }
 
-  app.listen(adminPort, () => {
+  const server = app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
   })
 
-  
   // Graceful shutdown
   const shutdown = async () => {
     agent.config.logger.info('[Shutdown] Stopping services...')
+    server.close()
     await stopPurgeSchedulers()
+    await agent.shutdown()
     process.exit(0)
   }
 

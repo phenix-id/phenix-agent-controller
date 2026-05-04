@@ -80,7 +80,11 @@ export class PurgeWorker {
       msg.ack()
 
       if (this.webhookUrl) {
-        await sendPurgeWebhook(this.webhookUrl, recordId, this.recordType, tenantId, PurgeDeletionStatus.DELETED, logger)
+        try {
+          await sendPurgeWebhook(this.webhookUrl, recordId, this.recordType, tenantId, PurgeDeletionStatus.DELETED, logger)
+        } catch (webhookErr: any) {
+          logger.warn('[Purge] Webhook delivery failed after deletion', { recordId, recordType, error: webhookErr?.message })
+        }
       }
     } catch (err: any) {
       if (err instanceof RecordNotFoundError) {
@@ -89,7 +93,11 @@ export class PurgeWorker {
         msg.ack()
 
         if (this.webhookUrl) {
-          await sendPurgeWebhook(this.webhookUrl, recordId, this.recordType, tenantId, PurgeDeletionStatus.ALREADY_ABSENT, logger)
+          try {
+            await sendPurgeWebhook(this.webhookUrl, recordId, this.recordType, tenantId, PurgeDeletionStatus.ALREADY_ABSENT, logger)
+          } catch (webhookErr: any) {
+            logger.warn('[Purge] Webhook delivery failed for already-absent record', { recordId, recordType, error: webhookErr?.message })
+          }
         }
         return
       }

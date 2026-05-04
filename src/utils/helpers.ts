@@ -229,7 +229,6 @@ async function fetchPlatformToken(
 
   const cachedToken = getCachedToken(clientId)
   if (cachedToken) {
-    console.log(`[${label}] using cached token for clientId:`, clientId)
     return cachedToken
   }
 
@@ -258,12 +257,8 @@ async function fetchPlatformToken(
     throw error
   }
 
-  console.log(`[${label}] token response status:`, tokenResponse.status)
-  console.log(`[${label}] token response data:`, JSON.stringify(tokenResponse.data, null, 2))
-
   const token: string = tokenResponse.data?.data?.access_token
   if (!token) {
-    console.error(`[${label}] unexpected token response shape:`, JSON.stringify(tokenResponse.data, null, 2))
     throw new Error(`[${label}] access_token not found in platform response`)
   }
 
@@ -350,10 +345,9 @@ export async function checkX509Certificates(
   if (!isDedicated) {
     resolvedTenantId = tenantId
     if (!resolvedTenantId) throw new Error(`[${label}] tenantId is required for shared agent but was not provided`)
-    console.log(`[${label}] using tenantId:`, resolvedTenantId)
   }
 
-  console.log(`[${label}] agent type: ${isDedicated ? 'dedicated' : 'shared'}, certificates:`, x509Certificates)
+  console.log(`[${label}] agent type: ${isDedicated ? 'dedicated' : 'shared'}, certificate count: ${x509Certificates.length}`)
 
   const token = await fetchPlatformToken(tokenUrl, clientId, clientSecret, label)
 

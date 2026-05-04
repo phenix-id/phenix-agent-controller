@@ -34,7 +34,7 @@ export async function pemToRawEd25519PrivateKey(derKey: string | Buffer): Promis
 
   // Ed25519 JWK exports the *seed* (first 32 bytes of the private key)
   const jwk = keyObj.export({ format: 'jwk' })
-  if (!jwk.d) throw new Error('Not an Ed25519 private key')
+  if (!jwk.d) throw new Error('Failed to extract private key material: missing d component in JWK')
 
   return Buffer.from(jwk.d, 'base64').toString('hex')
 }
