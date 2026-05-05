@@ -16,6 +16,7 @@ export class PurgeWorker {
   private recordType: PurgeRecordType
   private consumerName: string
   private webhookUrl: string | undefined
+  private stopped = false
 
   public constructor(recordType: PurgeRecordType, consumerName: string, webhookUrl?: string) {
     this.recordType = recordType
@@ -23,10 +24,14 @@ export class PurgeWorker {
     this.webhookUrl = webhookUrl
   }
 
+  public stop(): void {
+    this.stopped = true
+  }
+
   public async start(agent: Agent, consumer: Consumer): Promise<void> {
     agent.config.logger.info('[Purge] Worker started', { consumer: this.consumerName })
 
-    while (true) {
+    while (!this.stopped) {
       try {
         const messages = await consumer.consume()
         for await (const msg of messages) {
@@ -34,6 +39,7 @@ export class PurgeWorker {
         }
         agent.config.logger.warn('[Purge] Consume loop ended — restarting', { consumer: this.consumerName })
       } catch (err: any) {
+        if (this.stopped) return
         agent.config.logger.error('[Purge] Consume loop error — restarting after delay', {
           consumer: this.consumerName,
           error: err?.message,

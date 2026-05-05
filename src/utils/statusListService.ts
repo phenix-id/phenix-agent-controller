@@ -98,6 +98,11 @@ export async function checkAndCreateStatusList(agent: Agent, listId: string, iss
 
     if (res.status === 404) {
       const size = listSize || Number(process.env.STATUS_LIST_DEFAULT_SIZE)
+      if (!size || !Number.isInteger(size) || size <= 0) {
+        throw new Error(
+          `[checkAndCreateStatusList] invalid status list size: ${size}. Set STATUS_LIST_DEFAULT_SIZE to a positive integer.`,
+        )
+      }
       const statusList = new StatusList(new Array(size).fill(0), 1)
 
       const didDocument = await agent.dids.resolve(issuerDid)

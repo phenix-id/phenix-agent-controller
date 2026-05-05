@@ -32,6 +32,7 @@ export class NatsPurgeScheduler {
   private jsm: JetStreamManager | null = null
   private ttlSeconds = 0
   private recordTypes: PurgeRecordType[] = []
+  private workers: PurgeWorker[] = []
 
   public async start(agent: Agent, config: PurgeConfig, webhookUrl: string | undefined): Promise<void> {
     const { natsConfig } = config
@@ -85,6 +86,10 @@ export class NatsPurgeScheduler {
   }
 
   public async stop(): Promise<void> {
+    for (const worker of this.workers) {
+      worker.stop()
+    }
+    this.workers = []
     if (this.nc) {
       await this.nc.drain()
       this.nc = null
@@ -181,7 +186,9 @@ export class NatsPurgeScheduler {
     const launch = async () => {
       const consumer = await this.js!.consumers.get(PURGE_STREAM, consumerName)
       const worker = new PurgeWorker(recordType, consumerName, webhookUrl)
+      this.workers.push(worker)
       await worker.start(agent, consumer)
+      this.workers = this.workers.filter((w) => w !== worker)
     }
 
     launch().catch((err: Error) => {
