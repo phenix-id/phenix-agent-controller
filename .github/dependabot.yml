@@ -4,9 +4,9 @@ version: 2
 
 updates:
   # =========================
-  # Yarn Dependencies (on main branch)
+  # Yarn Dependencies (via npm ecosystem)
   # =========================
-  - package-ecosystem: "yarn"
+  - package-ecosystem: "npm"    # ← use "npm", not "yarn"
     directory: "/"              # or "/client" if package.json is inside a subfolder
     target-branch: "main"       # always open PRs against main
     schedule:
@@ -28,14 +28,14 @@ updates:
 
     labels:
       - "dependencies"
-      - "yarn"
+      - "yarn"                   # you can keep this label for clarity
 
     commit-message:
       prefix: "chore"
       include: "scope"
 
   # =========================
-  # GitHub Actions (on main branch)
+  # GitHub Actions
   # =========================
   - package-ecosystem: "github-actions"
     directory: "/"
