@@ -3,21 +3,57 @@
 version: 2
 
 updates:
-  # 1) Update GitHub Actions used in workflows (.github/workflows/*.yml)
-  - package-ecosystem: "github-actions"
-    directory: "/"              # Looks in .github/workflows/**/*.yml
+  # =========================
+  # Yarn Dependencies
+  # =========================
+  - package-ecosystem: "yarn"
+    directory: "/"              # or "/client" if package.json is inside a subfolder
     schedule:
       interval: "weekly"
-      day: "monday"             # Run every Monday
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
     open-pull-requests-limit: 10
 
-  # 2) Update Yarn dependencies (yarn.lock + package.json)
-  - package-ecosystem: "yarn"
-    directory: "/"              # Or "/client" if your package.json is inside a subfolder
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+
+    allow:
+      - dependency-type: "all"
+
+    labels:
+      - "dependencies"
+      - "yarn"
+
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # =========================
+  # GitHub Actions
+  # =========================
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"             # Run every Monday
-      time: "09:00"             # Optional: set specific time
-      timezone: "Asia/Kolkata"  # Optional: your timezone
-    open-pull-requests-limit: 20
-    target-branch: "main"       # Branch to target
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+    commit-message:
+      prefix: "ci"
+
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
